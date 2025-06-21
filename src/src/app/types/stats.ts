@@ -3,19 +3,24 @@ import { BlocCategory } from './bloc';
 export interface HealthWatchData {
   id: number;
   cdate: string;
-  recovery: number;
-  resting_hr: number;
-  hrv: number;
-  temperature: number;
-  oxy_level: number;
-  strain: number;
-  sleep_score: number;
-  sleep_duration_light: number; //minutes
-  sleep_duration_deep: number; //minutes
-  sleep_duration_rem: number; //minutes
-  sleep_duration_awake: number; //minutes
-  sleep_efficiency: number;
-  sleep_duration_total: number; //minutes
+
+  steps?: number;
+  stand_time?: number;
+
+  hr_min?: number;
+  hr_max?: number;
+  hr_avg?: number;
+  hr_resting?: number;
+  hrv?: number;
+
+  whoop_recovery?: number;
+  whoop_strain?: number;
+  whoop_sleepscore?: number;
+
+  sleep_asleep?: number;
+  sleep_start?: string;
+  sleep_end?: string;
+  sleep_total?: number;
 }
 
 export interface BlocsByCategory extends BlocCategory {

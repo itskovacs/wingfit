@@ -503,85 +503,65 @@ class HealthWatchData(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     cdate: date = Field(index=True)
     user: str = Field(foreign_key="user.username", ondelete="CASCADE")
-    recovery: int
-    resting_hr: int
-    hrv: int
-    temperature: float
-    oxy_level: float
-    strain: float
-    sleep_score: int
-    sleep_duration_light: int
-    sleep_duration_deep: int
-    sleep_duration_rem: int
-    sleep_duration_awake: int
-    sleep_efficiency: int
 
-    # spo2: int  # %
-    # stand_hour: int  # applestandhour
-    # stand_time: int  # applestandtime
-    # flights: int  # Count
-    # steps: int  # Count
-    # walking_hr: int  # Avg
-    # walking_speed: int  # kmh
+    steps: int | None
+    stand_time: int | None
+    hr_min: int | None
+    hr_max: int | None
+    hr_avg: int | None
+    hr_resting: int | None
+    hrv: int | None
 
-    # hr_min: int  # bpm
-    # hr_max: int  # bpm
-    # hr_avg: int  # bpm
-    # hr_resting: int  # bpm
-    # hrv: int  # ms
+    sleep_asleep: int | None
+    sleep_start: str | None
+    sleep_end: str | None
+    sleep_total: int | None
 
-    # audio_exp: int  # db
-
-    # sleep_awake: int  # hours
-    # sleep_asleep: int  # hours
-    # sleep_start: str  # Datetime
-    # sleep_end: str  # Datetime
-    # sleep_total: int  # hours
-    # sleep_temp: int  # appleSleepingWristTemperature, float, relative baseline
-
-    # recovery: int
-    # resting_hr: int
-    # hrv: int
-    # temperature: float
-    # oxy_level: float
-    # strain: float
-
-    # sleep_score: int  # Whoop specific
+    # Whoop specific
+    whoop_recovery: int | None
+    whoop_strain: float | None
+    whoop_sleepscore: int | None
 
 
 class HealthWatchDataRead(SQLModel):
     id: int
     cdate: date
-    recovery: int
-    resting_hr: int
-    hrv: int
-    temperature: float
-    oxy_level: float
-    strain: float
-    sleep_score: int
-    sleep_duration_light: int
-    sleep_duration_deep: int
-    sleep_duration_rem: int
-    sleep_duration_awake: int
-    sleep_efficiency: int
-    sleep_duration_total: int  # Injected, computed
+
+    steps: int | None
+    stand_time: int | None
+    hr_min: int | None
+    hr_max: int | None
+    hr_avg: int | None
+    hr_resting: int | None
+    hrv: int | None
+
+    sleep_asleep: int | None
+    sleep_start: str | None
+    sleep_end: str | None
+    sleep_total: int | None
+
+    # Whoop specific
+    whoop_recovery: int | None
+    whoop_strain: float | None
+    whoop_sleepscore: int | None
 
     @classmethod
     def serialize(cls, obj: HealthWatchData) -> "HealthWatchDataRead":
         return cls(
             id=obj.id,
             cdate=obj.cdate,
-            recovery=obj.recovery,
-            resting_hr=obj.resting_hr,
+            steps=obj.steps,
+            stand_time=obj.stand_time,
+            hr_min=obj.hr_min,
+            hr_max=obj.hr_max,
+            hr_avg=obj.hr_avg,
+            hr_resting=obj.hr_resting,
             hrv=obj.hrv,
-            temperature=obj.temperature,
-            oxy_level=obj.oxy_level,
-            strain=obj.strain,
-            sleep_score=obj.sleep_score,
-            sleep_duration_light=obj.sleep_duration_light,
-            sleep_duration_deep=obj.sleep_duration_deep,
-            sleep_duration_rem=obj.sleep_duration_rem,
-            sleep_duration_awake=obj.sleep_duration_awake,
-            sleep_duration_total=obj.sleep_duration_light + obj.sleep_duration_deep + obj.sleep_duration_rem,
-            sleep_efficiency=obj.sleep_efficiency,
+            sleep_asleep=obj.sleep_asleep,
+            sleep_start=obj.sleep_start,
+            sleep_end=obj.sleep_end,
+            sleep_total=obj.sleep_total,
+            whoop_recovery=obj.whoop_recovery,
+            whoop_strain=obj.whoop_strain,
+            whoop_sleepscore=obj.whoop_sleepscore,
         )

@@ -8,3 +8,4 @@ pydantic_settings
 requests
 Pillow
 pyotp
+alembic

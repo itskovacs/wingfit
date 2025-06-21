@@ -19,6 +19,7 @@ from ..models.models import (
 )
 from ..utils.date import parse_str_or_date_to_date
 from ..utils.file import download_file, upload_f_to_tempfile
+from ..utils.watchparsers import applewatch_normalize
 from ..utils.logging import app_logger
 
 router = APIRouter(prefix="/api/stats", tags=["statistics"])
@@ -131,6 +132,46 @@ def get_hw_data(
     return [HealthWatchDataRead.serialize(r) for r in results]
 
 
+@router.post("/applewatch_archive")
+async def post_applewatch_archive(
+    session: SessionDep,
+    current_user: Annotated[str, Depends(get_current_username)],
+    file: UploadFile = File(...),
+):
+    temporary_fp = await upload_f_to_tempfile(file)
+    inserted = 0
+    data = {}
+    with open(temporary_fp, "r") as aw_data:
+        content = aw_data.read()
+        data = applewatch_normalize(content)
+
+    existing_records = {
+        record.cdate: record
+        for record in session.exec(select(HealthWatchData).where(HealthWatchData.user == current_user)).all()
+    }  # {date: HealthWatchData}
+
+    for date, fields in data.items():
+        date = parse_str_or_date_to_date(date)
+
+        if date in existing_records:
+            existing_record = existing_records[date]
+
+            for key, value in fields.items():
+                setattr(existing_record, key, value)
+
+            session.add(existing_record)
+            continue
+
+        new_aw_data = HealthWatchData(cdate=date, user=current_user, **fields)
+        session.add(new_aw_data)
+
+    inserted = len(session.new)
+    session.commit()
+    Path(temporary_fp).unlink()
+
+    return {"count": inserted}
+
+
 @router.post("/whoop_archive")
 async def post_whoop_archive(
     session: SessionDep,
@@ -182,41 +223,38 @@ async def post_whoop_archive(
                 if date_value in existing_records:
                     existing_record = existing_records[date_value]
 
-                    if existing_record.recovery != row[3]:
-                        existing_record.recovery = row[3]
+                    if existing_record.whoop_recovery != row[3]:
+                        existing_record.whoop_recovery = row[3]
                         updated = True
-                    if existing_record.strain != row[8]:
-                        existing_record.strain = row[8]
-                        updated = True
-                    if existing_record.resting_hr != row[4]:
-                        existing_record.resting_hr = row[4]
+                    if existing_record.hr_resting != row[4]:
+                        existing_record.hr_resting = row[4]
                         updated = True
                     if existing_record.hrv != row[5]:
                         existing_record.hrv = row[5]
                         updated = True
-                    if existing_record.temperature != row[6]:
-                        existing_record.temperature = row[6]
+                    if existing_record.whoop_strain != row[8]:
+                        existing_record.whoop_strain = row[8]
                         updated = True
-                    if existing_record.oxy_level != row[7]:
-                        existing_record.oxy_level = row[7]
+                    if existing_record.hr_max != row[10]:
+                        existing_record.hr_max = row[10]
                         updated = True
-                    if existing_record.sleep_score != row[14]:
-                        existing_record.sleep_score = row[14]
+                    if existing_record.hr_avg != row[11]:
+                        existing_record.hr_avg = row[11]
                         updated = True
-                    if existing_record.sleep_duration_light != row[18]:
-                        existing_record.sleep_duration_light = row[18]
+                    if existing_record.sleep_start != row[12]:
+                        existing_record.sleep_start = row[12].split(" ")[1]
                         updated = True
-                    if existing_record.sleep_duration_deep != row[19]:
-                        existing_record.sleep_duration_deep = row[19]
+                    if existing_record.sleep_end != row[13]:
+                        existing_record.sleep_end = row[13].split(" ")[1]
                         updated = True
-                    if existing_record.sleep_duration_rem != row[20]:
-                        existing_record.sleep_duration_rem = row[20]
+                    if existing_record.whoop_sleepscore != row[14]:
+                        existing_record.whoop_sleepscore = row[14]
                         updated = True
-                    if existing_record.sleep_duration_awake != row[21]:
-                        existing_record.sleep_duration_awake = row[21]
+                    if existing_record.sleep_asleep != row[16]:
+                        existing_record.sleep_asleep = row[16]
                         updated = True
-                    if existing_record.sleep_efficiency != row[24]:
-                        existing_record.sleep_efficiency = row[24]
+                    if existing_record.sleep_total != row[17]:
+                        existing_record.sleep_total = row[17]
                         updated = True
 
                     if updated:
@@ -226,18 +264,17 @@ async def post_whoop_archive(
                 new_whoop_data = HealthWatchData(
                     cdate=date_value,
                     user=current_user,
-                    recovery=row[3],
-                    strain=row[8],
-                    resting_hr=row[4],
+                    whoop_recovery=row[3],
+                    hr_resting=row[4],
                     hrv=row[5],
-                    temperature=row[6],
-                    oxy_level=row[7],
-                    sleep_score=row[14],
-                    sleep_duration_light=row[18],
-                    sleep_duration_deep=row[19],
-                    sleep_duration_rem=row[20],
-                    sleep_duration_awake=row[21],
-                    sleep_efficiency=row[24],
+                    whoop_strain=row[8],
+                    hr_max=row[10],
+                    hr_avg=row[11],
+                    sleep_start=row[12].split(" ")[1],
+                    sleep_end=row[13].split(" ")[1],
+                    whoop_sleepscore=row[14],
+                    sleep_asleep=row[16],
+                    sleep_total=row[17],
                 )
                 session.add(new_whoop_data)
 

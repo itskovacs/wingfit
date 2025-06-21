@@ -130,7 +130,7 @@ async def admin_import_data(
     content = await file.read()
     data = json.loads(content)
     for user in data:
-        if not session.get(User, current_user):
+        if not session.get(User, user):
             app_logger.error(f"[admin_import_data] Trying to import data for unknown user {user}")
             continue
 
@@ -201,6 +201,50 @@ async def admin_import_data(
                 new_pr.values = pr_values
 
             session.add(new_pr)
+
+        for hwdata in d.get("hw_data", []):
+            existing_records = {
+                record.cdate: record
+                for record in session.exec(select(HealthWatchData).where(HealthWatchData.user == user)).all()
+            }  # {date: HealthWatchData}
+
+            date = parse_str_or_date_to_date(hwdata.get("cdate"))
+
+            # We pop some keys because we unpack obj
+            hwdata.pop("id", None)
+            hwdata.pop("cdate", None)
+
+            if int(d.get("_", {}).get("version", "0.0.0").split(".")[0]) < 5:
+                # We need to normalize the previous model to the new
+                hwdata["whoop_recovery"] = hwdata.get("recovery")
+                hwdata.pop("recovery", None)
+                hwdata["hr_resting"] = hwdata.get("resting_hr")
+                hwdata.pop("resting_hr", None)
+                hwdata["whoop_strain"] = hwdata.get("strain")
+                hwdata.pop("strain", None)
+                hwdata["whoop_sleepscore"] = hwdata.get("sleep_score")
+                hwdata.pop("sleep_score", None)
+                hwdata["sleep_total"] = hwdata.get("sleep_duration_awake", 0) + hwdata.get(
+                    "sleep_duration_total", 0
+                )
+                hwdata.pop("sleep_duration_awake", None)
+                hwdata.pop("sleep_duration_total", None)
+                hwdata["sleep_duration_total"] = hwdata.get("sleep_asleep")
+                hwdata.pop("sleep_asleep", None)
+
+            if date in existing_records:
+                existing_record = existing_records[date]
+                model_keys = HealthWatchData.model_fields.keys()
+
+                for key, value in hwdata.items():
+                    if key in model_keys:
+                        setattr(existing_record, key, value)
+
+                session.add(existing_record)
+                continue
+
+            new_hw = HealthWatchData(**hwdata, cdate=date, user=user)
+            session.add(new_hw)
 
     session.commit()
     return {}

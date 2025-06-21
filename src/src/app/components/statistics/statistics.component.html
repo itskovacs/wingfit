@@ -124,11 +124,23 @@
                 <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
               </div>
 
-              <div class="space-y-2">
-                <p class="text-sm text-gray-300 select-none">The average heart rate variability for
-                  WHOOP members is
-                  78 for 25-year-olds, 60 for 35-year-olds and 48 for 45-year-olds. <a class="text-blue-500"
-                    href="https://www.whoop.com/us/en/thelocker/what-is-a-good-hrv/" target="_blank">Source</a></p>
+              <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
+                <span>Heart Rate Variability (HRV) is a non-invasive biomarker
+                  commonly used to monitor recovery and autonomic nervous system balance.
+                </span>
+                <span>
+                  Trends in HRV can reflect an individual's physiological adaptation:
+                </span>
+                <span class="flex items-center gap-2">
+                  <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better recovery
+                  and resilience to
+                  stress
+                </span>
+                <span class="flex items-center gap-2">
+                  <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or insufficient
+                  recovery
+                </span>
+                <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
               </div>
             </div>
           </div>
@@ -412,7 +424,7 @@
   <p-card>
     <div class="p-4">
       <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-0">Whoop Strain / Recovery</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-0">Strain / Recovery</h1>
 
         <div class="flex flex-wrap justify-center gap-2 items-center select-none">
           <div class="px-3 py-1 rounded-md bg-[#3b82f6]/10 dark:bg-white/10 inline-flex items-center gap-2">
@@ -425,9 +437,48 @@
             <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Recovery</span>
           </div>
 
-          <div class="px-3 py-1 rounded-md bg-[#c088bf]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#c088bf]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
+          <div class="relative group cursor-help">
+            <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
+              <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
+              <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
+              <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
+            </div>
+
+            <div
+              class="absolute invisible opacity-0 group-hover:visible group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
+              <div
+                class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
+                      <path clip-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        fill-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+                </div>
+
+                <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
+                  <span>Heart Rate Variability (HRV) is a non-invasive biomarker
+                    commonly used to monitor recovery and autonomic nervous system balance.
+                  </span>
+                  <span>
+                    Trends in HRV can reflect an individual's physiological adaptation:
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better recovery
+                    and resilience to
+                    stress
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or insufficient
+                    recovery
+                  </span>
+                  <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -444,6 +495,146 @@
             </h2>
             <p class="mt-4 font-light text-center text-gray-500">
               {{ year }} has no Whoop data
+            </p>
+          </div>
+        </div>
+        }
+        } @placeholder (minimum 0.7s) {
+        <p-skeleton height="20rem"></p-skeleton>
+        }
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="max-w-screen-2xl mx-auto px-4 m-4">
+  <p-card>
+    <div class="p-4">
+      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep / Recovery</h1>
+
+        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+          <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
+          </div>
+
+          <div class="px-3 py-1 rounded-md bg-[#a52a2a]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#a52a2a]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Resting HR</span>
+          </div>
+
+          <div class="relative group cursor-help">
+            <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
+              <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
+              <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
+              <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
+            </div>
+
+            <div
+              class="absolute invisible opacity-0 group-hover:visible group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
+              <div
+                class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
+                      <path clip-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        fill-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+                </div>
+
+                <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
+                  <span>Heart Rate Variability (HRV) is a non-invasive biomarker
+                    commonly used to monitor recovery and autonomic nervous system balance.
+                  </span>
+                  <span>
+                    Trends in HRV can reflect an individual's physiological adaptation:
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better recovery
+                    and resilience to
+                    stress
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or insufficient
+                    recovery
+                  </span>
+                  <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        @defer {
+        @if (sleepRecoveryComboGraph.labels.length) {
+        <p-chart type="line" [data]="sleepRecoveryComboGraph" [options]="sleepRecoveryComboGraphOptions" />
+        } @else {
+        <div class="flex justify-center mt-4">
+          <div class="p-4">
+            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
+              Nothing to see yet
+            </h2>
+            <p class="mt-4 font-light text-center text-gray-500">
+              {{ year }} has no sleep / recovery data
+            </p>
+          </div>
+        </div>
+        }
+        } @placeholder (minimum 0.7s) {
+        <p-skeleton height="20rem"></p-skeleton>
+        }
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="max-w-screen-2xl mx-auto px-4 m-4">
+  <p-card>
+    <div class="p-4">
+      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep efficiency</h1>
+
+        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+          <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
+          </div>
+
+          <div class="px-3 py-1 rounded-md bg-[#bedbed]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#bedbed]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Bed Time</span>
+          </div>
+
+          <div class="px-3 py-1 rounded-md bg-[#F9D976]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#F9D976]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Wake Time</span>
+          </div>
+
+          <div class="px-3 py-1 rounded-md bg-[#B6BCC4]/10 dark:bg-white/10 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-md bg-[#B6BCC4]"></span>
+            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Efficiency</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        @defer {
+        @if (sleepEfficiencyComboGraph.labels.length) {
+        <p-chart type="line" [data]="sleepEfficiencyComboGraph" [options]="sleepEfficiencyComboGraphOptions" />
+        } @else {
+        <div class="flex justify-center mt-4">
+          <div class="p-4">
+            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
+              Nothing to see yet
+            </h2>
+            <p class="mt-4 font-light text-center text-gray-500">
+              {{ year }} has no sleep efficiency data
             </p>
           </div>
         </div>

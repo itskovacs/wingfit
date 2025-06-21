@@ -535,4 +535,13 @@ export class ApiService {
       { headers: { enctype: 'multipart/form-data' } },
     );
   }
+
+  postAppleWatchData(data: FormData): Observable<{ count: number }> {
+    // data is file: File
+    return this.httpClient.post<{ count: number }>(
+      this.apiBaseUrl + '/stats/applewatch_archive',
+      data,
+      { headers: { enctype: 'multipart/form-data' } },
+    );
+  }
 }

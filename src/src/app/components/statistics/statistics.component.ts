@@ -47,6 +47,8 @@ export class StatisticsComponent {
   categoryDurationPerWeek: any;
   durationsByCategory: any;
   strainRecoveryComboGraph: any;
+  sleepRecoveryComboGraph: any;
+  sleepEfficiencyComboGraph: any;
 
   averageSleepDuration = 0;
   averageStrain = 0;
@@ -170,12 +172,8 @@ export class StatisticsComponent {
           display: false,
         },
         min: 0,
-        type: 'linear',
         display: true,
         position: 'left',
-        ticks: {
-          color: '#3b82f6',
-        },
       },
       yNotes: {
         display: false,
@@ -186,12 +184,101 @@ export class StatisticsComponent {
         min: 0,
       },
       yRecovery: {
-        type: 'linear',
         display: true,
         position: 'right',
-        ticks: {
-          color: '#15803d',
+      },
+    },
+  };
+
+  sleepRecoveryComboGraphOptions = {
+    maintainAspectRatio: false,
+    aspectRatio: 0.75,
+    responsive: true,
+    animation: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        enabled: false,
+        external: this.customChartTooltip.bind(this),
+      },
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
         },
+      },
+      yHRV: {
+        grid: {
+          display: false,
+        },
+        min: 0,
+        display: true,
+        position: 'left',
+      },
+      ySleep: {
+        display: false,
+      },
+      ySleepAsleep: {
+        display: false,
+      },
+      yRHR: {
+        display: true,
+        position: 'right',
+      },
+    },
+  };
+
+  sleepEfficiencyComboGraphOptions = {
+    maintainAspectRatio: false,
+    aspectRatio: 0.75,
+    responsive: true,
+    animation: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        enabled: false,
+        external: this.customChartTooltip.bind(this),
+      },
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+      ySleep: {
+        display: false,
+      },
+      ySleepTotal: {
+        grid: {
+          display: false,
+        },
+        display: true,
+        position: 'left',
+      },
+      ySleepAsleep: {
+        display: false,
+      },
+      yBedtime: {
+        display: false,
+      },
+      yWaketime: {
+        display: false,
+      },
+      yEfficiency: {
+        display: true,
+        position: 'right',
+        min: 0,
+        max: 100,
       },
     },
   };
@@ -235,19 +322,22 @@ export class StatisticsComponent {
     this.apiService.getHealthWatchData(this.year).subscribe((data) => {
       const result = processHealthData(data, this.latestOnly, this.notes);
 
-      this.averageSleepDuration = result.averages.sleep;
+      this.averageSleepDuration = result.averages.sleep_asleep;
       this.averageStrain = result.averages.strain;
       this.averageRecovery = result.averages.recovery;
       this.averageHRV = result.averages.hrv;
       this.averageRestingHR = result.averages.restingHR;
 
       this.strainRecoveryComboGraph = result.strainRecoveryComboGraph;
+      this.sleepRecoveryComboGraph = result.sleepRecoveryComboGraph;
+      this.sleepEfficiencyComboGraph = result.sleepEfficiencyComboGraph;
 
       this.strainGauge = result.gauges.strain;
       this.recoveryGauge = result.gauges.recovery;
       this.hrvGauge = result.gauges.hrv;
 
       if (result.trends) {
+        this.sleepTrend = result.trends.sleep_asleep;
         this.strainTrend = result.trends.strain;
         this.recoveryTrend = result.trends.recovery;
         this.hrvTrend = result.trends.hrv;
@@ -284,6 +374,7 @@ export class StatisticsComponent {
 
     let itemNotes: any = undefined;
     items.map((item: any, index: number) => {
+      if (item.raw?.hide) return;
       if (item.raw?.content) {
         itemNotes = item;
         return;
@@ -293,7 +384,7 @@ export class StatisticsComponent {
         <div class="tooltip-row">
           <span class="tooltip-color" style="background:${item.element.options.borderColor}"></span>
           <span class="tooltip-label">${tooltip.body[index].lines.flat()[0].split(':')[0]}</span>
-          <span class="tooltip-value">${tooltip.body[index].lines.flat()[0].split(':')[1]}<span style="font-size: 0.75rem; color: #777;">${item.raw?.misc || ''}</span></span>
+          <span class="tooltip-value">${item.raw?.dValue || tooltip.body[index].lines.flat()[0].split(':')[1]}<span style="font-size: 0.75rem; color: #777;">${item.raw?.unit || ''}</span></span>
         </div>
       `;
     });
@@ -353,20 +444,23 @@ export class StatisticsComponent {
         tap(({ healthResult, durationsResult }) => {
           Object.assign(this, durationsResult);
 
-          this.averageSleepDuration = healthResult.averages.sleep;
+          this.averageSleepDuration = healthResult.averages.sleep_asleep;
           this.averageStrain = healthResult.averages.strain;
           this.averageRecovery = healthResult.averages.recovery;
           this.averageHRV = healthResult.averages.hrv;
           this.averageRestingHR = healthResult.averages.restingHR;
 
           this.strainRecoveryComboGraph = healthResult.strainRecoveryComboGraph;
+          this.sleepRecoveryComboGraph = healthResult.sleepRecoveryComboGraph;
+          this.sleepEfficiencyComboGraph =
+            healthResult.sleepEfficiencyComboGraph;
 
           this.strainGauge = healthResult.gauges.strain;
           this.recoveryGauge = healthResult.gauges.recovery;
           this.hrvGauge = healthResult.gauges.hrv;
 
           if (healthResult.trends) {
-            this.sleepTrend = healthResult.trends.sleep;
+            this.sleepTrend = healthResult.trends.sleep_asleep;
             this.strainTrend = healthResult.trends.strain;
             this.recoveryTrend = healthResult.trends.recovery;
             this.hrvTrend = healthResult.trends.hrv;
@@ -428,9 +522,23 @@ export class StatisticsComponent {
     );
 
     modal.onClose.subscribe({
-      next: (formData: FormData | null) => {
-        if (formData) {
-          this.apiService.postWhoopData(formData).subscribe({
+      next: (data: { tab: string; fd: FormData } | null) => {
+        if (!data) return;
+
+        if (data.tab === 'whoop') {
+          this.apiService.postWhoopData(data.fd).subscribe({
+            next: (resp) => {
+              const count = resp.count;
+              this.utilsService.toast(
+                'info',
+                'Success',
+                `${count} entr${count > 1 ? 'ies' : 'y'} imported`,
+              );
+              if (count) this.getData();
+            },
+          });
+        } else if (data.tab === 'applewatch') {
+          this.apiService.postAppleWatchData(data.fd).subscribe({
             next: (resp) => {
               const count = resp.count;
               this.utilsService.toast(

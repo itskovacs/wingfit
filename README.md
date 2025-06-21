@@ -31,7 +31,9 @@
 
 ## 📦 About <a name = "about"></a>
 
-Wingfit is a minimalist fitness app to organize your workouts and track your personal records. Demo is worth a thousand words, head to 📸 [Demo](#Demo).
+Wingfit is a minimalist fitness app to **plan your workouts**, **track your personal records** and **leverage smartwatch data**.
+
+Demo is worth a thousand words, head to 📸 [Demo](#Demo).
 
 🔒 Privacy-First – No telemetry, no tracking, fully self-hostable. You own your data. Inspect, modify, and contribute freely.
 
@@ -53,13 +55,15 @@ cd wingfit
 
 ### Docker 🐳 (recommended)
 
-If needed, edit `docker-compose.yml` to modify the mapped port (default is 127.0.0.1:8080).
+If needed, edit `docker-compose.yml` to modify the mapped port (default is `127.0.0.1:8080`).
 
 Run the container, head to Wingfit website, create an account, enjoy ✅
 
 ```bash
 docker compose up -d
 ```
+
+<br>
 
 ### Serving the content
 You can serve Wingfit using a web server, eg: Nginx
@@ -98,13 +102,12 @@ python -m venv venv
 source venv/bin/activate
 
 # Install dependencies
+cd wingfit
 pip install .
 
 # Run the backend, port :8000
-fastapi run fastapp:app
+fastapi run main.py
 ```
-
-You can specify
 
 **frontend**
 
@@ -168,9 +171,9 @@ Contributions are welcome! Feel free to open issues if you find bugs and pull re
 
 ### **Frontend**
 
-- 🅰️ Angular (Progressive Web App)
-- 🏗️ PrimeNG
-- 🎨 Tailwind CSS
+- 🅰️ Angular 19
+- 🏗️ PrimeNG 19
+- 🎨 Tailwind CSS 4
 
 ### **Backend**
 

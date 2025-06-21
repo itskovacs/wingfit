@@ -3,7 +3,6 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TabsModule } from 'primeng/tabs';
-import { ApiService } from '../../services/api.service';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
@@ -15,6 +14,7 @@ import { DynamicDialogRef } from 'primeng/dynamicdialog';
 })
 export class HealthwatchUploadModalComponent {
   linkInput = new FormControl('');
+  selectedTab = 'whoop';
 
   constructor(private ref: DynamicDialogRef) {}
 
@@ -43,6 +43,6 @@ export class HealthwatchUploadModalComponent {
   }
 
   close(data: FormData) {
-    this.ref.close(data);
+    this.ref.close({ tab: this.selectedTab, fd: data });
   }
 }
