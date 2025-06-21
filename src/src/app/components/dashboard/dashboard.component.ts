@@ -163,7 +163,7 @@ export class DashboardComponent {
       ),
     );
 
-    if (_displayedBlocs.length) {
+    if (_displayedBlocs.length || type === 'move') {
       switch (type) {
         case 'create':
           _displayedBlocs.forEach((bloc) => {
@@ -198,22 +198,36 @@ export class DashboardComponent {
           break;
 
         case 'move':
-          _displayedBlocs.forEach((bloc) => {
-            // Delete the previous bloc
-            Object.keys(this.displayedBlocs).some((weekdate) => {
-              const index = this.displayedBlocs[weekdate].findIndex(
-                (b) => b.id === bloc.id,
-              );
-              if (index !== -1) {
-                this.displayedBlocs[weekdate].splice(index, 1);
-                return true;
-              }
-              return false;
-            });
+          blocs.forEach((bloc) => {
+            if (!(bloc.cdate in this.displayedBlocs)) {
+              // Bloc moved out of current week, delete the previous bloc in week
+              Object.keys(this.displayedBlocs).some((weekdate) => {
+                const index = this.displayedBlocs[weekdate].findIndex(
+                  (b) => b.id === bloc.id,
+                );
+                if (index !== -1) {
+                  this.displayedBlocs[weekdate].splice(index, 1);
+                  return true;
+                }
+                return false;
+              });
+            } else {
+              // Bloc moved in current week, delete the previous bloc in week
+              Object.keys(this.displayedBlocs).some((weekdate) => {
+                const index = this.displayedBlocs[weekdate].findIndex(
+                  (b) => b.id === bloc.id,
+                );
+                if (index !== -1) {
+                  this.displayedBlocs[weekdate].splice(index, 1);
+                  return true;
+                }
+                return false;
+              });
 
-            // recreate it afterwards
-            this.displayedBlocs[bloc.cdate].push(bloc);
-            this.displayedBlocsDuration[bloc.cdate] += bloc.duration || 0;
+              // recreate it afterwards
+              this.displayedBlocs[bloc.cdate].push(bloc);
+              this.displayedBlocsDuration[bloc.cdate] += bloc.duration || 0;
+            }
           });
 
           // Calculate displayedBlocsDuration from displayedBlocs, as the previous Bloc's date would have its duration

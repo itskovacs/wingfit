@@ -42,7 +42,8 @@
         }
 
         @if (bloc.result) {
-        <div class="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg p-4"
+        <div
+          class="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg p-4 overflow-y-auto"
           [style.background-color]="bloc.category.color">
           <div class="text-white text-lg text-center font-semibold">{{ bloc.result.value }} {{ bloc.result.key != "time"
             ? bloc.result.key : "" }}</div>
