@@ -11,7 +11,7 @@ FROM python:3.12-slim
 WORKDIR /app
 # Touch the files
 COPY backend .
-RUN pip install -r requirements.txt
+RUN pip install -r wingfit/requirements.txt
 # Copy to /app/frontend, where /app has the backend python files also
 COPY --from=build /app/dist/wingfit/browser ./frontend
 EXPOSE 8080
