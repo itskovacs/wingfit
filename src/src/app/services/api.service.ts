@@ -190,7 +190,6 @@ export class ApiService {
     limit?: number,
     offset?: number,
   ): Observable<Bloc[]> {
-    //TODO: Mettre un genre de *kwargs et params.set(x, *kwargs[x])
     let params = new HttpParams();
     if (startDate)
       params = params.set(

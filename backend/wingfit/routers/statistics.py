@@ -155,9 +155,11 @@ async def post_applewatch_archive(
 
         if date in existing_records:
             existing_record = existing_records[date]
+            model_keys = HealthWatchData.model_fields.keys()
 
             for key, value in fields.items():
-                setattr(existing_record, key, value)
+                if key in model_keys:
+                    setattr(existing_record, key, value)
 
             session.add(existing_record)
             continue

@@ -65,7 +65,6 @@ export const routes: Routes = [
         path: 'adminp',
         component: AdminPanelComponent,
         title: 'Wingfit - Admin Panel',
-        // TODO: CanActivate(is_su)
       },
 
       {

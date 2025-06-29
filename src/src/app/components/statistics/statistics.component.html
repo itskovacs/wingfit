@@ -1,19 +1,25 @@
 <section class="mx-auto fixed-toolbar-on-scroll">
   <p-toolbar [style]="{ border: '0' }" [styleClass]="'md:!px-8 !bg-slate-50 dark:!bg-surface-900'">
     <ng-template #start>
-      <div class="w-32">
-        @if (year == today.getFullYear()) {
-        <p-togglebutton (click)="toggleDataRange()" [ngModel]="latestOnly" [onLabel]="'Latest (30d)'"
-          offLabel="Yearly" />
-        }
+      <div class="w-16">
+        <p-togglebutton (click)="toggleYearView()" [ngModel]="latestOnly" onLabel="Monthly" offLabel="Yearly" />
       </div>
     </ng-template>
 
     <ng-template #center>
-      <div class="flex items-center gap-2">
-        <p-button (click)="previousYear()" icon="pi pi-angle-left" text severity="secondary" />
-        <span class="text-2xl font-semibold py-2">{{ year }}</span>
-        <p-button (click)="nextYear()" icon="pi pi-angle-right" text severity="secondary" />
+      <div class="flex items-center gap">
+        <p-button (click)=" previousYear()" icon="pi pi-chevron-circle-left" text severity="secondary" />
+        <p-button [class.hidden]="yearlyView" (click)="previousMonth()" icon="pi pi-angle-left" text
+          severity="secondary" />
+        <div class="flex flex-col items-center justify-center w-20 select-none">
+          <span class="text-2xl font-semibold">{{ selectedMonth.year }}</span>
+          <span class="text-sm cursor-pointer" pTooltip="Double click to reset" tooltipPosition="bottom"
+            tooltipStyleClass="text-sm" (dblclick)="resetSelectedMonthToday()">{{ yearlyView ? '-' : getMonthName()
+            }}</span>
+        </div>
+        <p-button [class.hidden]="yearlyView" (click)="nextMonth()" icon="pi pi-angle-right" text
+          severity="secondary" />
+        <p-button (click)="nextYear()" icon="pi pi-chevron-circle-right" text severity="secondary" />
       </div>
     </ng-template>
 
@@ -65,7 +71,7 @@
                 'pi-arrow-down-right': sleepTrend.direction === 'down',
                 'pi-arrow-up-right': sleepTrend.direction === 'up',
                 'pi-equals': sleepTrend.direction === ''
-                }"></span> {{ sleepTrend.change | number: '1.0-0' }}m </span>
+                }"></span>@if (sleepTrend.change) { {{ sleepTrend.change | number: '1.0-0' }}m }</span>
           }
           } @placeholder (minimum 0.5s) {
           <p-skeleton height="2.25rem" width="5rem"></p-skeleton>
@@ -94,7 +100,7 @@
               'pi-arrow-down-right': restingHRTrend.direction === 'down',
               'pi-arrow-up-right': restingHRTrend.direction === 'up',
               'pi-equals': restingHRTrend.direction === ''
-              }"></span> {{ restingHRTrend.change | number: '1.0-1' }} </span>
+              }"></span>@if (restingHRTrend.change) { {{ restingHRTrend.change | number: '1.0-1' }} }</span>
           }
           } @placeholder (minimum 0.5s) {
           <p-skeleton height="2.25rem" width="5rem"></p-skeleton>
@@ -162,7 +168,7 @@
               'pi-arrow-down-right': hrvTrend.direction === 'down',
               'pi-arrow-up-right': hrvTrend.direction === 'up',
               'pi-equals': hrvTrend.direction === ''
-              }"></span> {{ hrvTrend.change | number: '1.0-1' }} </span>
+              }"></span>@if (hrvTrend.change) { {{ hrvTrend.change | number: '1.0-1' }} }</span>
           }
           } @placeholder (minimum 0.5s) {
           <p-skeleton height="2.25rem" width="5rem"></p-skeleton>
@@ -217,7 +223,7 @@
               'pi-arrow-down-right': recoveryTrend.direction === 'down',
               'pi-arrow-up-right': recoveryTrend.direction === 'up',
               'pi-equals': recoveryTrend.direction === ''
-              }"></span> {{ recoveryTrend.change | number: '1.0-1' }} </span>
+              }"></span>@if (recoveryTrend.change) { {{ recoveryTrend.change | number: '1.0-1' }} }</span>
           }
           } @placeholder (minimum 0.5s) {
           <p-skeleton height="2.25rem" width="5rem"></p-skeleton>
@@ -407,7 +413,7 @@
               Nothing to see yet
             </h2>
             <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} has no workouts duration
+              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no workouts duration
             </p>
           </div>
         </div>
@@ -494,7 +500,7 @@
               Nothing to see yet
             </h2>
             <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} has no Whoop data
+              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no Whoop data
             </p>
           </div>
         </div>
@@ -581,7 +587,7 @@
               Nothing to see yet
             </h2>
             <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} has no sleep / recovery data
+              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no sleep / recovery data
             </p>
           </div>
         </div>
@@ -634,7 +640,7 @@
               Nothing to see yet
             </h2>
             <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} has no sleep efficiency data
+              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no sleep efficiency data
             </p>
           </div>
         </div>

@@ -14,9 +14,10 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, map, Observable, tap } from 'rxjs';
 import { processHealthData } from './health-processing';
 import { processDurationsData } from './duration-processing';
-import { StatGauge, Trend } from '../../types/stats';
+import { HealthWatchData, StatGauge, Trend } from '../../types/stats';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Bloc, BlocCategory } from '../../types/bloc';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-statistics',
@@ -31,14 +32,22 @@ import { Bloc, BlocCategory } from '../../types/bloc';
     ToggleButtonModule,
     CommonModule,
     AsyncPipe,
+    TooltipModule,
   ],
   standalone: true,
   templateUrl: './statistics.component.html',
   styleUrl: './statistics.component.scss',
 })
 export class StatisticsComponent {
-  year: number = new Date().getFullYear();
   today: Date = new Date();
+  selectedMonth: { year: number; month: number } = {
+    year: this.today.getFullYear(),
+    month: this.today.getMonth() + 1,
+  };
+  yearlyView = false;
+
+  healthDataCache: { [year: number]: HealthWatchData[] } = {};
+
   isMobile =
     window.screen.width < 768 || navigator.userAgent.indexOf('Mobi') > -1;
 
@@ -283,6 +292,16 @@ export class StatisticsComponent {
     },
   };
 
+  get year() {
+    return this.selectedMonth.year;
+  }
+
+  getMonthName(): string {
+    return new Date(0, this.selectedMonth.month - 1).toLocaleString('en-US', {
+      month: 'long',
+    });
+  }
+
   constructor(
     private apiService: ApiService,
     private utilsService: UtilsService,
@@ -315,35 +334,39 @@ export class StatisticsComponent {
     }
 
     this.categories$ = this.apiService.getCategories();
-    this.getData();
+    this.getYearlyData();
   }
 
-  loadHealthData() {
-    this.apiService.getHealthWatchData(this.year).subscribe((data) => {
-      const result = processHealthData(data, this.latestOnly, this.notes);
+  sliceHealthData(hwdata: HealthWatchData[]): {
+    current: HealthWatchData[];
+    prev: HealthWatchData[];
+  } {
+    if (this.yearlyView) {
+      const current = hwdata.filter(
+        (d) => new Date(d.cdate).getFullYear() === this.selectedMonth.year,
+      );
+      return { current, prev: [] };
+    }
 
-      this.averageSleepDuration = result.averages.sleep_asleep;
-      this.averageStrain = result.averages.strain;
-      this.averageRecovery = result.averages.recovery;
-      this.averageHRV = result.averages.hrv;
-      this.averageRestingHR = result.averages.restingHR;
-
-      this.strainRecoveryComboGraph = result.strainRecoveryComboGraph;
-      this.sleepRecoveryComboGraph = result.sleepRecoveryComboGraph;
-      this.sleepEfficiencyComboGraph = result.sleepEfficiencyComboGraph;
-
-      this.strainGauge = result.gauges.strain;
-      this.recoveryGauge = result.gauges.recovery;
-      this.hrvGauge = result.gauges.hrv;
-
-      if (result.trends) {
-        this.sleepTrend = result.trends.sleep_asleep;
-        this.strainTrend = result.trends.strain;
-        this.recoveryTrend = result.trends.recovery;
-        this.hrvTrend = result.trends.hrv;
-        this.restingHRTrend = result.trends.restingHR;
-      }
+    const { year, month } = this.selectedMonth;
+    const current = hwdata.filter((d) => {
+      const date = new Date(d.cdate);
+      return date.getFullYear() === year && date.getMonth() + 1 === month;
     });
+    let prev: HealthWatchData[] = [];
+    const { year: prevYear, month: prevMonth } = this.getPrevMonth(
+      this.selectedMonth,
+    );
+    if (!current.length) return { current, prev };
+
+    prev = hwdata.filter((d) => {
+      const date = new Date(d.cdate);
+      return (
+        date.getFullYear() === prevYear && date.getMonth() + 1 === prevMonth
+      );
+    });
+
+    return { current, prev };
   }
 
   customChartTooltip(context: any) {
@@ -416,10 +439,10 @@ export class StatisticsComponent {
     tooltipEl.style.pointerEvents = 'none';
   }
 
-  getData() {
+  getYearlyData() {
     forkJoin({
       total: this.apiService.getWeeklyDurationTotal(this.year),
-      health: this.apiService.getHealthWatchData(this.year),
+      hwdata: this.apiService.getHealthWatchData(this.year),
       durations: this.apiService.getWeeklyDuration(this.year),
       notes: this.apiService.getNoteBlocs(),
     })
@@ -431,13 +454,10 @@ export class StatisticsComponent {
           );
           this.notes = notes;
         }),
-        map(({ health, durations }) => {
+        map(({ hwdata, durations }) => {
+          const { current, prev } = this.sliceHealthData(hwdata);
           return {
-            healthResult: processHealthData(
-              health,
-              this.latestOnly,
-              this.notes,
-            ),
+            healthResult: processHealthData(current, this.notes, prev),
             durationsResult: processDurationsData(durations),
           };
         }),
@@ -471,21 +491,96 @@ export class StatisticsComponent {
       .subscribe();
   }
 
-  toggleDataRange() {
-    this.latestOnly = !this.latestOnly;
-    this.loadHealthData();
+  loadHealthData() {
+    this.apiService.getHealthWatchData(this.year).subscribe((data) => {
+      const { current, prev } = this.sliceHealthData(data);
+
+      const result = processHealthData(current, this.notes, prev);
+
+      this.averageSleepDuration = result.averages.sleep_asleep;
+      this.averageStrain = result.averages.strain;
+      this.averageRecovery = result.averages.recovery;
+      this.averageHRV = result.averages.hrv;
+      this.averageRestingHR = result.averages.restingHR;
+
+      this.strainRecoveryComboGraph = result.strainRecoveryComboGraph;
+      this.sleepRecoveryComboGraph = result.sleepRecoveryComboGraph;
+      this.sleepEfficiencyComboGraph = result.sleepEfficiencyComboGraph;
+
+      this.strainGauge = result.gauges.strain;
+      this.recoveryGauge = result.gauges.recovery;
+      this.hrvGauge = result.gauges.hrv;
+
+      if (result.trends) {
+        this.sleepTrend = result.trends.sleep_asleep;
+        this.strainTrend = result.trends.strain;
+        this.recoveryTrend = result.trends.recovery;
+        this.hrvTrend = result.trends.hrv;
+        this.restingHRTrend = result.trends.restingHR;
+      }
+    });
+  }
+
+  getPrevMonth({ year, month }: { year: number; month: number }) {
+    return month === 1
+      ? { year: year - 1, month: 12 }
+      : { year, month: month - 1 };
+  }
+
+  nextMonth() {
+    let { year, month } = this.selectedMonth;
+    let yearUpdated = false;
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+      yearUpdated = true;
+    }
+    this.selectedMonth = { year, month };
+    yearUpdated ? this.getYearlyData() : this.loadHealthData();
+  }
+
+  previousMonth() {
+    let { year, month } = this.selectedMonth;
+    let yearUpdated = false;
+    month -= 1;
+    if (month < 1) {
+      month = 12;
+      year -= 1;
+      yearUpdated = true;
+    }
+    this.selectedMonth = { year, month };
+    this.getYearlyData();
+    yearUpdated ? this.getYearlyData() : this.loadHealthData();
   }
 
   nextYear() {
-    this.year = this.year + 1;
-    this.latestOnly = this.year == this.today.getFullYear();
-    this.getData();
+    this.selectedMonth = {
+      year: this.selectedMonth.year + 1,
+      month: this.selectedMonth.month,
+    };
+    this.getYearlyData();
   }
 
   previousYear() {
-    this.year = this.year - 1;
-    this.latestOnly = this.year == this.today.getFullYear();
-    this.getData();
+    this.selectedMonth = {
+      year: this.selectedMonth.year - 1,
+      month: this.selectedMonth.month,
+    };
+    this.getYearlyData();
+  }
+
+  toggleYearView() {
+    this.yearlyView = !this.yearlyView;
+    this.getYearlyData();
+  }
+
+  resetSelectedMonthToday() {
+    this.selectedMonth = {
+      year: this.today.getFullYear(),
+      month: this.today.getMonth() + 1,
+    };
+    this.getYearlyData();
   }
 
   getWeekRange(weekNumber: number): string {
@@ -502,6 +597,37 @@ export class StatisticsComponent {
       date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
     return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+  }
+
+  getMonthsWithData(
+    healthData: HealthWatchData[],
+  ): { year: number; month: number; label: string }[] {
+    // map {"YYYY-MM": [data]}
+    const monthMap: { [k: string]: HealthWatchData[] } = {};
+    healthData.forEach((d) => {
+      const date = new Date(d.cdate);
+      const y = date.getFullYear();
+      const m = date.getMonth();
+      const key = `${y}-${m + 1}`;
+      if (!monthMap[key]) monthMap[key] = [];
+      monthMap[key].push(d);
+    });
+
+    return Object.entries(monthMap)
+      .map(([k, v]) => {
+        const [year, month] = k.split('-').map(Number);
+        return {
+          year,
+          month,
+          label: new Date(year, month - 1).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          }),
+        };
+      })
+      .sort((a, b) =>
+        a.year !== b.year ? a.year - b.year : a.month - b.month,
+      );
   }
 
   healthWatchUpload() {
@@ -534,7 +660,7 @@ export class StatisticsComponent {
                 'Success',
                 `${count} entr${count > 1 ? 'ies' : 'y'} imported`,
               );
-              if (count) this.getData();
+              if (count) this.getYearlyData();
             },
           });
         } else if (data.tab === 'applewatch') {
@@ -546,7 +672,7 @@ export class StatisticsComponent {
                 'Success',
                 `${count} entr${count > 1 ? 'ies' : 'y'} imported`,
               );
-              if (count) this.getData();
+              if (count) this.getYearlyData();
             },
           });
         }

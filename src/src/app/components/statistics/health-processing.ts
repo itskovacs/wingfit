@@ -5,6 +5,7 @@ import {
   getQuartile,
   normalizeSleepStr,
   SleepStrMinToTime,
+  groupByMonth,
 } from './stats-utils';
 
 export function minutesToHour(value: number) {
@@ -18,9 +19,9 @@ export function minutesToHour(value: number) {
 }
 
 export function processHealthData(
-  data: HealthWatchData[],
-  latestOnly: boolean,
+  currentSlice: HealthWatchData[],
   notes: Bloc[],
+  previousSlice?: HealthWatchData[],
 ) {
   let ret = {
     averages: {
@@ -48,43 +49,38 @@ export function processHealthData(
     },
   };
 
-  if (!data.length) return ret;
-  const LATEST_COUNT = 30;
+  if (!currentSlice) return ret;
 
-  const sorted = data.sort(
-    (a, b) => new Date(a.cdate).getTime() - new Date(b.cdate).getTime(),
-  );
-  const slice = latestOnly ? sorted.slice(-LATEST_COUNT) : sorted;
-
-  const sleep_asleep = slice
+  const sleep_asleep = currentSlice
     .map((d) => d.sleep_asleep)
     .filter((n): n is number => n !== undefined);
-  const sleep_start = slice
+  const sleep_start = currentSlice
     .map((d) => normalizeSleepStr(d.sleep_start))
     .filter((n): n is number => n !== undefined);
-  const whoop_sleepscore = slice
+  const whoop_sleepscore = currentSlice
     .map((d) => d.whoop_sleepscore)
     .filter((n): n is number => n !== undefined);
-  const sleep_end = slice
+  const sleep_end = currentSlice
     .map((d) => normalizeSleepStr(d.sleep_end, 0))
     .filter((n): n is number => n !== undefined);
-  const sleep_total = slice
+  const sleep_total = currentSlice
     .map((d) => d.sleep_total)
     .filter((n): n is number => n !== undefined);
-  const hrv = slice
+  const hrv = currentSlice
     .map((d) => d.hrv)
     .filter((n): n is number => n !== undefined);
-  const strain = slice
+  const strain = currentSlice
     .map((d) => d.whoop_strain)
     .filter((n): n is number => n !== undefined);
-  const recovery = slice
+  const recovery = currentSlice
     .map((d) => d.whoop_recovery)
     .filter((n): n is number => n !== undefined);
-  const restingHR = slice
+  const restingHR = currentSlice
     .map((d) => d.hr_resting)
     .filter((n): n is number => n !== undefined);
 
-  const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+  const avg = (arr: number[]) =>
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
   const averages = {
     sleep_asleep: avg(sleep_asleep),
@@ -109,36 +105,34 @@ export function processHealthData(
     restingHR: undefined,
   };
 
-  //Trends only for latestOnly option, if 2x LATEST_COUNT(30d) sample size
-  if (latestOnly && sorted.length > 2 * LATEST_COUNT) {
-    const previous_data = sorted.slice(-LATEST_COUNT * 2, -LATEST_COUNT);
-    const previous_sleep_total = previous_data
+  if (previousSlice && previousSlice.length > 0) {
+    const previous_sleep_total = previousSlice
       .map((d) => d.sleep_total)
       .filter((n): n is number => n !== undefined);
-    const previoushrv = previous_data
+    const previoushrv = previousSlice
       .map((d) => d.hrv)
       .filter((n): n is number => n !== undefined);
-    const previousstrain = previous_data
+    const previousstrain = previousSlice
       .map((d) => d.whoop_strain)
       .filter((n): n is number => n !== undefined);
-    const previousrecovery = previous_data
+    const previousrecovery = previousSlice
       .map((d) => d.whoop_recovery)
       .filter((n): n is number => n !== undefined);
-    const previousrestingHR = previous_data
+    const previousrestingHR = previousSlice
       .map((d) => d.hr_resting)
       .filter((n): n is number => n !== undefined);
 
     trends = {
-      sleep_asleep: calculateTrend(sleep_total, previous_sleep_total),
-      hrv: calculateTrend(hrv, previoushrv),
+      sleep_asleep: calculateTrend(sleep_total, previous_sleep_total, true),
+      hrv: calculateTrend(hrv, previoushrv, true),
       strain: calculateTrend(strain, previousstrain),
-      recovery: calculateTrend(recovery, previousrecovery),
+      recovery: calculateTrend(recovery, previousrecovery, true),
       restingHR: calculateTrend(restingHR, previousrestingHR),
     };
   }
 
-  // Normalize labels
-  const labels = slice.map((d) =>
+  // format dates for X axis
+  const labels = currentSlice.map((d) =>
     new Date(d.cdate).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -161,7 +155,7 @@ export function processHealthData(
     datasets: [
       {
         label: 'Notes',
-        data: slice.map((obj, index) => {
+        data: currentSlice.map((obj, index) => {
           if (!(obj.cdate in parsedNotes)) return { x: index, y: null };
           return {
             x: index,
