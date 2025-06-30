@@ -2,6 +2,53 @@ import json
 from datetime import datetime
 
 
+def mywhoop_normalize(data) -> dict:
+    data = json.loads(data)
+
+    normalized_data = {}
+    collections = ["sleep_collection", "recovery_collection", "cycle_collection"]
+
+    fields = {
+        "sleep_collection": {},
+        "recovery_collection": {
+            "recovery_score": "whoop_recovery",
+            "resting_heart_rate": "hr_resting",
+            "hrv_rmssd_milli": "hrv",
+        },
+        "cycle_collection": {
+            "strain": "whoop_strain",
+            "max_heart_rate": "hr_max",
+            "average_heart_rate": "hr_avg",
+        },
+    }
+
+    for c in collections:
+        records = data[c]["records"]
+
+        for record in records:
+            date = record.get("created_at")[:10]
+
+            score = record.get("score", {})
+            for key in fields[c]:
+                value = score.get(key)
+                if isinstance(value, float):
+                    value = round(value)
+                normalized_data.setdefault(date, {})[fields[c][key]] = value
+
+            if c == "sleep_collection" and not record.get("nap", False):
+                # Sleep data is too specific, we need some parsing, skip naps
+                normalized_data.setdefault(date, {})["sleep_start"] = record.get("start")
+                normalized_data.setdefault(date, {})["sleep_end"] = record.get("end")
+
+                summary = record.get("score", {}).get("stage_summary", {})
+                in_bed = round(summary.get("total_in_bed_time_milli", 0) / 60000)
+                awake = round(summary.get("total_awake_time_milli", 0) / 60000)
+                normalized_data.setdefault(date, {})["sleep_asleep"] = in_bed - awake
+                normalized_data.setdefault(date, {})["sleep_total"] = in_bed
+
+    return normalized_data
+
+
 def whoop_normalize(): ...
 
 
