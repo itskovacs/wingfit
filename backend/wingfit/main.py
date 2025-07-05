@@ -12,8 +12,8 @@ from .db.core import init_db
 from .routers import admin, auth, blocs, categories, pr, programs
 from .routers import settings as settings_r
 from .routers import stash, statistics
-from .utils.logging import request_logger
 from .utils.date import dt_utc_str
+from .utils.logging import request_logger
 
 if not Path(settings.FRONTEND_FOLDER).is_dir():
     raise ValueError()
@@ -53,7 +53,10 @@ async def http_logger__spa_handler(request: Request, call_next):
     response = await call_next(request)
 
     # Retrieve JWT second part, with properties
-    bearer = request.headers.get("Authorization", ".").split(".")[1]
+    try:
+        bearer = request.headers.get("Authorization", ".").split(".")[1]
+    except Exception:
+        bearer = request.headers.get("Authorization")
 
     # Keys are light to limit size
     # T: Datetime, M: Method, U: URL, A: Bearer, B: Body size, C: Resp. code, S: Resp. length, H: Host IP
