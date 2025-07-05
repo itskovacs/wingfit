@@ -56,6 +56,16 @@ export function SleepStrMinToTime(
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
 
+export function minutesToHour(value: number) {
+  const hours = Math.floor(value / 60);
+  const minutes = Math.round(value % 60); // Ensure proper rounding
+
+  const formattedHours = String(hours);
+  const formattedMinutes = String(minutes).padStart(2, '0');
+
+  return `${formattedHours}h${formattedMinutes}`;
+}
+
 export function groupByMonth<T extends { cdate: string | Date }>(
   data: T[],
 ): T[][] {

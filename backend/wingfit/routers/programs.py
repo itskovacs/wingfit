@@ -26,9 +26,9 @@ from ..models.models import (
     ProgramUpdate,
 )
 from ..security import verify_exists_and_owns
-from ..utils.file import remove_image, save_image, read_image
+from ..utils.file import read_image, remove_image, save_image
 from ..utils.logging import app_logger
-from ..utils.misc import b64img_decode, b64e
+from ..utils.misc import b64e, b64img_decode
 
 router = APIRouter(prefix="/api/programs", tags=["programs"])
 

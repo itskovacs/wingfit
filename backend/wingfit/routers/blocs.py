@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from ..deps import SessionDep, get_current_username
+from ..deps import SessionDep, get_current_username, get_username_with_token_support
 from ..models.models import (
     Bloc,
     BlocCreate,
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/blocs", tags=["blocs"])
 @router.get("", response_model=list[BlocRead])
 async def get_blocs(
     session: SessionDep,
-    current_user: Annotated[str, Depends(get_current_username)],
+    current_user: Annotated[str, Depends(get_username_with_token_support)],
     startdate: str | None = None,
     enddate: str | None = None,
     limit: int = 0,

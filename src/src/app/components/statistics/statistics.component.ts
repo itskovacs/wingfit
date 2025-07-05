@@ -13,11 +13,15 @@ import { UtilsService } from '../../services/utils.service';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, map, Observable, tap } from 'rxjs';
 import { processHealthData } from './health-processing';
-import { processDurationsData } from './duration-processing';
+import {
+  processWeeklyDurationsData,
+  processWeekdayDurationsData,
+} from './duration-processing';
 import { HealthWatchData, StatGauge, Trend } from '../../types/stats';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Bloc, BlocCategory } from '../../types/bloc';
 import { TooltipModule } from 'primeng/tooltip';
+import { AccordionModule } from 'primeng/accordion';
 
 @Component({
   selector: 'app-statistics',
@@ -30,6 +34,7 @@ import { TooltipModule } from 'primeng/tooltip';
     ChartModule,
     ToolbarModule,
     ToggleButtonModule,
+    AccordionModule,
     CommonModule,
     AsyncPipe,
     TooltipModule,
@@ -45,6 +50,7 @@ export class StatisticsComponent {
     month: this.today.getMonth() + 1,
   };
   yearlyView = false;
+  sliceLength: number | undefined;
 
   healthDataCache: { [year: number]: HealthWatchData[] } = {};
 
@@ -58,6 +64,7 @@ export class StatisticsComponent {
   strainRecoveryComboGraph: any;
   sleepRecoveryComboGraph: any;
   sleepEfficiencyComboGraph: any;
+  weekdayComboGraph: any;
 
   averageSleepDuration = 0;
   averageStrain = 0;
@@ -65,6 +72,8 @@ export class StatisticsComponent {
   averageHRV = 0;
   averageRestingHR = 0;
   totalWorkoutsHours = 0;
+
+  cacheWeekdays = {};
 
   strainGauge: StatGauge | undefined;
   recoveryGauge: StatGauge | undefined;
@@ -154,7 +163,7 @@ export class StatisticsComponent {
     },
   };
 
-  comboGraphOptions = {
+  strainRecoveryComboGraphOptions = {
     maintainAspectRatio: false,
     aspectRatio: 0.75,
     responsive: true,
@@ -242,6 +251,33 @@ export class StatisticsComponent {
     },
   };
 
+  weekdayComboGraphOptions = {
+    indexAxis: 'y',
+    maintainAspectRatio: false,
+    aspectRatio: 1,
+    responsive: true,
+    animation: false,
+    interaction: {
+      mode: 'index',
+      axis: 'y',
+      intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        enabled: false,
+        external: this.customChartTooltip.bind(this),
+      },
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
   sleepEfficiencyComboGraphOptions = {
     maintainAspectRatio: false,
     aspectRatio: 0.75,
@@ -291,10 +327,6 @@ export class StatisticsComponent {
       },
     },
   };
-
-  get year() {
-    return this.selectedMonth.year;
-  }
 
   getMonthName(): string {
     return new Date(0, this.selectedMonth.month - 1).toLocaleString('en-US', {
@@ -357,6 +389,8 @@ export class StatisticsComponent {
     const { year: prevYear, month: prevMonth } = this.getPrevMonth(
       this.selectedMonth,
     );
+
+    this.sliceLength = current.length;
     if (!current.length) return { current, prev };
 
     prev = hwdata.filter((d) => {
@@ -441,28 +475,36 @@ export class StatisticsComponent {
 
   getYearlyData() {
     forkJoin({
-      total: this.apiService.getWeeklyDurationTotal(this.year),
-      hwdata: this.apiService.getHealthWatchData(this.year),
-      durations: this.apiService.getWeeklyDuration(this.year),
+      hwdata: this.apiService.getHealthWatchData(this.selectedMonth.year),
+      durations: this.apiService.getWeeklyDuration(this.selectedMonth.year),
+      weekday: this.apiService.getWeekdayDuration(this.selectedMonth.year),
       notes: this.apiService.getNoteBlocs(),
     })
       .pipe(
-        tap(({ total, notes }) => {
-          this.totalWorkoutsHours = total.reduce(
-            (sum, e) => sum + e.duration,
+        tap(({ durations, notes }) => {
+          this.totalWorkoutsHours = durations.reduce(
+            (sum, item) => sum + item.data.reduce((a, b) => a + b, 0),
             0,
           );
           this.notes = notes;
         }),
-        map(({ hwdata, durations }) => {
+        map(({ hwdata, durations, weekday }) => {
+          this.cacheWeekdays = weekday;
           const { current, prev } = this.sliceHealthData(hwdata);
+
           return {
             healthResult: processHealthData(current, this.notes, prev),
-            durationsResult: processDurationsData(durations),
+            durationsResult: processWeeklyDurationsData(durations),
+            weekdayResult: processWeekdayDurationsData(
+              this.cacheWeekdays,
+              this.selectedMonth.month,
+              this.yearlyView,
+            ),
           };
         }),
-        tap(({ healthResult, durationsResult }) => {
+        tap(({ healthResult, durationsResult, weekdayResult }) => {
           Object.assign(this, durationsResult);
+          this.weekdayComboGraph = weekdayResult;
 
           this.averageSleepDuration = healthResult.averages.sleep_asleep;
           this.averageStrain = healthResult.averages.strain;
@@ -492,33 +534,39 @@ export class StatisticsComponent {
   }
 
   loadHealthData() {
-    this.apiService.getHealthWatchData(this.year).subscribe((data) => {
-      const { current, prev } = this.sliceHealthData(data);
+    this.apiService
+      .getHealthWatchData(this.selectedMonth.year)
+      .subscribe((data) => {
+        const { current, prev } = this.sliceHealthData(data);
 
-      const result = processHealthData(current, this.notes, prev);
+        const result = processHealthData(current, this.notes, prev);
+        (this.weekdayComboGraph = processWeekdayDurationsData(
+          this.cacheWeekdays,
+          this.selectedMonth.month,
+          this.yearlyView,
+        )),
+          (this.averageSleepDuration = result.averages.sleep_asleep);
+        this.averageStrain = result.averages.strain;
+        this.averageRecovery = result.averages.recovery;
+        this.averageHRV = result.averages.hrv;
+        this.averageRestingHR = result.averages.restingHR;
 
-      this.averageSleepDuration = result.averages.sleep_asleep;
-      this.averageStrain = result.averages.strain;
-      this.averageRecovery = result.averages.recovery;
-      this.averageHRV = result.averages.hrv;
-      this.averageRestingHR = result.averages.restingHR;
+        this.strainRecoveryComboGraph = result.strainRecoveryComboGraph;
+        this.sleepRecoveryComboGraph = result.sleepRecoveryComboGraph;
+        this.sleepEfficiencyComboGraph = result.sleepEfficiencyComboGraph;
 
-      this.strainRecoveryComboGraph = result.strainRecoveryComboGraph;
-      this.sleepRecoveryComboGraph = result.sleepRecoveryComboGraph;
-      this.sleepEfficiencyComboGraph = result.sleepEfficiencyComboGraph;
+        this.strainGauge = result.gauges.strain;
+        this.recoveryGauge = result.gauges.recovery;
+        this.hrvGauge = result.gauges.hrv;
 
-      this.strainGauge = result.gauges.strain;
-      this.recoveryGauge = result.gauges.recovery;
-      this.hrvGauge = result.gauges.hrv;
-
-      if (result.trends) {
-        this.sleepTrend = result.trends.sleep_asleep;
-        this.strainTrend = result.trends.strain;
-        this.recoveryTrend = result.trends.recovery;
-        this.hrvTrend = result.trends.hrv;
-        this.restingHRTrend = result.trends.restingHR;
-      }
-    });
+        if (result.trends) {
+          this.sleepTrend = result.trends.sleep_asleep;
+          this.strainTrend = result.trends.strain;
+          this.recoveryTrend = result.trends.recovery;
+          this.hrvTrend = result.trends.hrv;
+          this.restingHRTrend = result.trends.restingHR;
+        }
+      });
   }
 
   getPrevMonth({ year, month }: { year: number; month: number }) {
@@ -550,7 +598,6 @@ export class StatisticsComponent {
       yearUpdated = true;
     }
     this.selectedMonth = { year, month };
-    this.getYearlyData();
     yearUpdated ? this.getYearlyData() : this.loadHealthData();
   }
 
@@ -584,12 +631,16 @@ export class StatisticsComponent {
   }
 
   getWeekRange(weekNumber: number): string {
-    const firstDayOfYear = new Date(this.year, 0, 1);
+    const firstDayOfYear = new Date(this.selectedMonth.year, 0, 1);
     const daysOffset = (weekNumber - 1) * 7;
     const firstWeekStart =
       firstDayOfYear.getDate() - firstDayOfYear.getDay() + 1;
 
-    const fromDate = new Date(this.year, 0, firstWeekStart + daysOffset);
+    const fromDate = new Date(
+      this.selectedMonth.year,
+      0,
+      firstWeekStart + daysOffset,
+    );
     const toDate = new Date(fromDate);
     toDate.setDate(fromDate.getDate() + 6);
 

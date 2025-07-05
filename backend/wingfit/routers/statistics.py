@@ -10,17 +10,11 @@ from sqlalchemy.sql import extract
 from sqlmodel import func, select
 
 from ..deps import SessionDep, get_current_username
-from ..models.models import (
-    Bloc,
-    BlocCategory,
-    BlocRead,
-    HealthWatchData,
-    HealthWatchDataRead,
-)
+from ..models.models import Bloc, BlocCategory, BlocRead, HealthWatchData, HealthWatchDataRead
 from ..utils.date import parse_str_or_date_to_date
 from ..utils.file import download_file, upload_f_to_tempfile
-from ..utils.watchparsers import applewatch_normalize, mywhoop_normalize
 from ..utils.logging import app_logger
+from ..utils.watchparsers import applewatch_normalize, mywhoop_normalize
 
 router = APIRouter(prefix="/api/stats", tags=["statistics"])
 
@@ -40,28 +34,44 @@ def get_blocs_note(session: SessionDep, current_user: Annotated[str, Depends(get
     return [BlocRead.serialize(c) for c in category.blocs]
 
 
-@router.get("/week_duration_total")
-def get_total_duration_per_week(
+@router.get("/weekday_duration")
+def get_weekday_duration_per_week(
     session: SessionDep,
     current_user: Annotated[str, Depends(get_current_username)],
     year: str | int | None = None,
-) -> list:
+):
     year = int(year) if year else datetime.now().year
 
     query = (
         select(
+            extract("dow", Bloc.cdate).label("weekday"),
             extract("week", Bloc.cdate).label("week"),
+            extract("month", Bloc.cdate).label("month"),
             extract("year", Bloc.cdate).label("year"),
             func.sum(Bloc.duration).label("duration"),
         )
         .where(Bloc.user == current_user)
         .where(Bloc.duration.isnot(None))
         .where(extract("year", Bloc.cdate) == year)
-        .group_by("year", "week")
+        .group_by("year", "month", "week", "weekday")
     )
 
     results = session.exec(query).all()
-    return [{"week": r.week, "duration": r.duration} for r in results]
+
+    month_data = {}  # { month: { week: [0,0,0,0,0,0,0] } }
+    for row in results:
+        month = int(row.month)
+        week = int(row.week)
+        # Map dow to isodow (Mon = 0, Sun = 6)
+        idx = int(row.weekday) - 1 if int(row.weekday) != 0 else 6
+        month_data.setdefault(month, {}).setdefault(week, [0] * 7)[idx] = row.duration or 0
+
+    out = {}  # { month: [ [week1], [week2], ... ] }
+    for month, week_map in month_data.items():
+        weeks_sorted = [week_map[week] for week in sorted(week_map)]
+        out[month] = weeks_sorted
+
+    return out
 
 
 @router.get("/week_duration")

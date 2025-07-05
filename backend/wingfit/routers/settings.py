@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import Annotated
-import pyotp
 
+import pyotp
 from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from .. import __version__
-from ..security import generate_mfa_secret, verify_mfa_code
 from ..deps import SessionDep, get_current_username
-from sqlalchemy.orm import selectinload
 from ..models.models import (
+    PR,
     Bloc,
     BlocCategory,
     BlocCategoryRead,
@@ -17,11 +17,11 @@ from ..models.models import (
     HealthWatchData,
     HealthWatchDataRead,
     Program,
-    PR,
     PRRead,
     User,
     UserRead,
 )
+from ..security import generate_mfa_secret, verify_mfa_code
 from ..utils.misc import check_update, generate_api_token
 from .programs import export_program
 

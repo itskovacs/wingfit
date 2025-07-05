@@ -1,34 +1,34 @@
+import json
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Body, File, Form, UploadFile, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from .. import __version__
 from ..db.core import init_user_data
 from ..deps import SessionDep, get_current_username
-from sqlalchemy.orm import selectinload
 from ..models.models import (
+    PR,
     Bloc,
     BlocCategory,
     BlocCategoryRead,
     BlocRead,
+    BlocResult,
     HealthWatchData,
     HealthWatchDataRead,
     Image,
-    ResultKeyEnum,
-    BlocResult,
     Program,
-    PR,
     PRRead,
     PRValue,
+    ResultKeyEnum,
     User,
     UserRead,
 )
-import json
 from ..security import ensure_superuser, hash_password, verify_mfa_code
-from ..utils.file import remove_image
 from ..utils.date import parse_str_or_date_to_date
+from ..utils.file import remove_image
 from ..utils.logging import app_logger
 from .programs import export_program, import_program
 

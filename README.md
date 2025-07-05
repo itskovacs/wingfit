@@ -103,10 +103,10 @@ source venv/bin/activate
 
 # Install dependencies
 cd wingfit
-pip install .
+pip install -r requirements.txt
 
 # Run the backend, port :8000
-fastapi run main.py
+fastapi run wingfit/main.py
 ```
 
 **frontend**

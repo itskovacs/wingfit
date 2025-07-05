@@ -23,15 +23,6 @@ export interface HealthWatchData {
   sleep_total?: number;
 }
 
-export interface BlocsByCategory extends BlocCategory {
-  count: number;
-}
-
-export interface WeeklyDurationTotal {
-  week: number;
-  duration: number; //minutes
-}
-
 export interface WeeklyDuration {
   // Basically chartjs data interface
   label: string;

@@ -9,7 +9,7 @@ def mywhoop_normalize(data) -> dict:
     collections = ["sleep_collection", "recovery_collection", "cycle_collection"]
 
     fields = {
-        "sleep_collection": {},
+        "sleep_collection": {"sleep_performance_percentage": "whoop_sleepscore"},
         "recovery_collection": {
             "recovery_score": "whoop_recovery",
             "resting_heart_rate": "hr_resting",

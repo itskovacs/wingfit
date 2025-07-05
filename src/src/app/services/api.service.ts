@@ -7,12 +7,7 @@ import { PR, PRvalue } from '../types/personal-record';
 import { Program, ProgramBloc, ProgramStep } from '../types/program';
 import { User } from '../types/user';
 import { Info } from '../types/info';
-import {
-  BlocsByCategory,
-  WeeklyDuration,
-  HealthWatchData,
-  WeeklyDurationTotal,
-} from '../types/stats';
+import { WeeklyDuration, HealthWatchData } from '../types/stats';
 
 @Injectable({
   providedIn: 'root',
@@ -496,12 +491,14 @@ export class ApiService {
     return this.httpClient.get<Bloc[]>(this.apiBaseUrl + '/stats/notes');
   }
 
-  getWeeklyDurationTotal(year: number): Observable<WeeklyDurationTotal[]> {
+  getWeekdayDuration(
+    year: number,
+  ): Observable<{ [monthNumber: number]: number[][] }> {
     let params = new HttpParams();
     params = params.set('year', year);
 
-    return this.httpClient.get<WeeklyDurationTotal[]>(
-      this.apiBaseUrl + '/stats/week_duration_total',
+    return this.httpClient.get<{ [monthNumber: number]: number[][] }>(
+      this.apiBaseUrl + '/stats/weekday_duration',
       { params },
     );
   }

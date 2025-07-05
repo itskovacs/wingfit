@@ -76,6 +76,17 @@ html {
   top: 0px;
 }
 
+.p-0 .p-accordionpanel {
+  border: none !important;
+}
+.p-0 .p-accordionheader {
+  overflow: visible !important;
+  padding: 0 !important;
+}
+.p-0 .p-accordioncontent-content {
+  padding: 0 !important;
+}
+
 .calendar-hover-week .p-datepicker-calendar {
   tr:has(.p-datepicker-day-selected) {
     background: rgb(226 232 240) !important;
@@ -94,6 +105,11 @@ html {
   tr:hover {
     background-color: rgb(226 232 240) !important;
   }
+}
+
+.inputBorderNone {
+  border: none;
+  box-shadow: none;
 }
 
 .custom-bloc-badge .p-badge {

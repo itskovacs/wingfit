@@ -5,18 +5,8 @@ import {
   getQuartile,
   normalizeSleepStr,
   SleepStrMinToTime,
-  groupByMonth,
+  minutesToHour,
 } from './stats-utils';
-
-export function minutesToHour(value: number) {
-  const hours = Math.floor(value / 60);
-  const minutes = Math.round(value % 60); // Ensure proper rounding
-
-  const formattedHours = String(hours);
-  const formattedMinutes = String(minutes).padStart(2, '0');
-
-  return `${formattedHours}h${formattedMinutes}`;
-}
 
 export function processHealthData(
   currentSlice: HealthWatchData[],
@@ -205,7 +195,7 @@ export function processHealthData(
         borderWidth: 2,
         segment: {
           borderColor: (ctx: any) => {
-            const value = ctx.p0.parsed.y;
+            const value = ctx.p1.parsed.y;
             return value >= 66
               ? '#15803d'
               : value >= 33

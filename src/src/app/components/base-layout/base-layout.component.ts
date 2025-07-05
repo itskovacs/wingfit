@@ -91,11 +91,11 @@ export class BaseLayoutComponent {
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
-    document.body.classList.add('overflow-y-hidden');
+    document.body.style.position = 'fixed';
   }
 
   closeMobileMenu() {
     this.isMobileMenuOpen = false;
-    document.body.classList.remove('overflow-y-hidden');
+    document.body.style.position = '';
   }
 }

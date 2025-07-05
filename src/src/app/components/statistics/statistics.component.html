@@ -14,7 +14,7 @@
         <div class="flex flex-col items-center justify-center w-20 select-none">
           <span class="text-2xl font-semibold">{{ selectedMonth.year }}</span>
           <span class="text-sm cursor-pointer" pTooltip="Double click to reset" tooltipPosition="bottom"
-            tooltipStyleClass="text-sm" (dblclick)="resetSelectedMonthToday()">{{ yearlyView ? '-' : getMonthName()
+            tooltipStyleClass="text-sm" (dblclick)="resetSelectedMonthToday()">{{ yearlyView ? '' : getMonthName()
             }}</span>
         </div>
         <p-button [class.hidden]="yearlyView" (click)="nextMonth()" icon="pi pi-angle-right" text
@@ -28,6 +28,22 @@
     </ng-template>
   </p-toolbar>
 </section>
+
+<div>
+  @if (!sliceLength || (sliceLength && sliceLength < 5)) { @if (sliceLength===0) { <div class="mx-auto p-4 my-4 w-fit max-w-[400px] text-sm text-center
+      text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-300">
+    <span class="font-semibold"><i class="pi pi-exclamation-triangle"></i> Sample size</span><br>There is no entry for
+    {{
+    getMonthName() }}.
+</div>
+} @else {<div class="mx-auto p-4 my-4 w-fit max-w-[400px] text-sm text-center
+      text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300">
+  <span class="font-semibold"><i class="pi pi-exclamation-triangle"></i> Sample size</span><br>There is less than 5
+  entries for {{ getMonthName() }}.
+</div>
+}
+}
+</div>
 
 <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-4 px-4 m-4">
   <div class="grid md:grid-cols-3 gap-4 md:w-3/4">
@@ -180,18 +196,23 @@
       @if (hrvGauge) {
       <div class="mt-4">
         <div class="relative h-2 w-full">
+          @if (averageHRV) {
           <div class="absolute -top-0.5 h-3 rounded-sm border border-dashed border-violet-200 bg-violet-50"
             [style.left]="hrvGauge.q_start_pct+'%'" [style.width]="(hrvGauge.q_end_pct - hrvGauge.q_start_pct) + '%'">
           </div>
+          }
           <div class="relative h-2 w-full rounded-sm bg-violet-200">
+            @if (averageHRV) {
             <div class="absolute h-2 rounded-sm bg-violet-400" [style.left]="hrvGauge.q_start_pct+'%'"
               [style.width]="(hrvGauge.q_end_pct - hrvGauge.q_start_pct) + '%'"></div>
+
             <div class="absolute top-[-4px] w-1 h-4 rounded bg-violet-500 ring-1 ring-white ring-offset-0"
               [style.left]="hrvGauge.average_pct+'%'" [title]="averageHRV"></div>
+            }
           </div>
         </div>
         <div class="mt-0.5 flex justify-between text-xs tracking-tight">
-          <span>{{ hrvGauge.first }}</span><span>{{ hrvGauge.last }}</span>
+          <span>{{ hrvGauge.first || '-' }}</span><span>{{ averageHRV ? hrvGauge.last : '-' }}</span>
         </div>
       </div>
       }
@@ -235,25 +256,29 @@
       @if (recoveryGauge) {
       <div class="mt-4">
         <div class="relative h-2 w-full">
+          @if (averageRecovery) {
           <div class="absolute -top-0.5 z-20 h-3 rounded-sm border border-dashed border-gray-500 dark:border-gray-200"
             [style.left]="recoveryGauge.q_start_pct+'%'"
             [title]="'From ' + recoveryGauge.q_start_pct + '% to ' + recoveryGauge.q_end_pct + '%'"
             [style.width]="(recoveryGauge.q_end_pct - recoveryGauge.q_start_pct) + '%'"></div>
+          }
 
           <div class="relative h-2 w-full rounded-sm">
             <div class="absolute h-2 rounded-l-sm bg-red-400" style="left: 0%; width: 33%;"></div>
             <div class="absolute h-2 bg-yellow-300" style="left: 33%; width: 34%;"></div>
-            <div class="absolute h-2 bg-emerald-400" style="left: 67%; width: 33%;"></div>
+            <div class="absolute h-2 rounded-e-sm bg-emerald-400" style="left: 67%; width: 33%;"></div>
 
+            @if (averageRecovery) {
             <div class="absolute top-[-4px] z-30 w-1 h-4 rounded ring-1 ring-white ring-offset-0"
               [class.!bg-red-500]="averageRecovery > 0 && averageRecovery < 33"
               [class.!bg-yellow-400]="averageRecovery >= 33 && averageRecovery < 67"
               [class.!bg-emerald-500]="averageRecovery >= 67" [style.left]="recoveryGauge.average_pct+'%'"
               [title]="averageRecovery"></div>
+            }
           </div>
         </div>
         <div class="mt-0.5 flex justify-between text-xs tracking-tight">
-          <span>{{ recoveryGauge.first }}</span><span>{{ recoveryGauge.last }}</span>
+          <span>{{ recoveryGauge.first || '-' }}</span><span>{{ averageRecovery ? recoveryGauge.last : '-' }}</span>
         </div>
       </div>
       }
@@ -328,18 +353,22 @@
       @if (strainGauge) {
       <div class="mt-4">
         <div class="relative h-2 w-full">
+          @if (averageStrain) {
           <div class="absolute -top-0.5 h-3 rounded-sm border border-dashed border-blue-400 bg-blue-200"
             [style.left]="strainGauge.q_start_pct+'%'"
             [style.width]="(strainGauge.q_end_pct - strainGauge.q_start_pct) + '%'"></div>
+          }
           <div class="relative h-2 w-full rounded-sm bg-blue-200">
             <div class="absolute h-2 rounded-sm bg-blue-400" [style.left]="strainGauge.q_start_pct+'%'"
               [style.width]="(strainGauge.q_end_pct - strainGauge.q_start_pct) + '%'"></div>
+            @if (averageStrain) {
             <div class="absolute top-[-4px] z-30 w-1 h-4 rounded bg-blue-500 ring-1 ring-white ring-offset-0"
               [style.left]="strainGauge.average_pct+'%'" [title]="averageStrain"></div>
+            }
           </div>
         </div>
         <div class="mt-0.5 flex justify-between text-xs tracking-tight">
-          <span>{{ strainGauge.first }}</span><span>{{ strainGauge.last }}</span>
+          <span>{{ strainGauge.first || '-' }}</span><span>{{ averageStrain ? strainGauge.last : '-' }}</span>
         </div>
       </div>
       }
@@ -358,14 +387,15 @@
           @defer {
           @if (totalWorkoutsHours && durationsByCategory.labels.length) {
           <p-chart type="pie" [data]="durationsByCategory" [options]="pieGraphOptions" height="160px" />
+          <span class="text-xs text-center text-gray-400">yearly</span>
           } @else {
           <div class="flex justify-center">
             <div class="p-4">
-              <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
+              <h2 class="mb-0 text-2xl text-center tracking-tight font-semibold text-gray-900">
                 Nothing to see yet
               </h2>
               <p class="mt-4 font-light text-center text-gray-500">
-                {{ year }} has no workouts duration
+                {{ selectedMonth.year }} has no workouts duration
               </p>
             </div>
           </div>
@@ -379,276 +409,364 @@
   </div>
 </div>
 
-<div class="max-w-screen-2xl mx-auto px-4 m-4">
-  <p-card>
-    <div class="p-4">
-      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-0">Weekly workouts duration</h1>
-
-        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
-          @defer {
-          @for (c of (categories$ | async); track c.id) {
-          <div class="px-3 py-1 rounded-md dark:bg-white/10 inline-flex items-center gap-2"
-            [style.backgroundColor]="c.color + '1A'">
-            <span class="w-2 h-2 rounded-md" [style.backgroundColor]="c.color"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0 capitalize">{{ c.name }}</span>
-          </div>
-          }
-          } @placeholder (minimum 0.7s) {
-          @for (_ of [1,2,3,4]; track _) {
-          <p-skeleton height="2rem" width="6rem"></p-skeleton>
-          }
-          }
-        </div>
-      </div>
-
-      <div class="mt-4">
-        @defer {
-        @if (totalWorkoutsHours && categoryDurationPerWeek.labels.length) {
-        <p-chart type="bar" [data]="categoryDurationPerWeek" [options]="stackedGraphOptions" />
-        } @else {
-        <div class="flex justify-center mt-4">
-          <div class="p-4">
-            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
-              Nothing to see yet
-            </h2>
-            <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no workouts duration
-            </p>
-          </div>
-        </div>
-        }
-        } @placeholder (minimum 0.7s) {
-        <p-skeleton height="20rem"></p-skeleton>
-        }
-      </div>
-    </div>
-  </p-card>
-</div>
-
-<div class="max-w-screen-2xl mx-auto px-4 m-4">
-  <p-card>
-    <div class="p-4">
-      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-0">Strain / Recovery</h1>
-
-        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
-          <div class="px-3 py-1 rounded-md bg-[#3b82f6]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#3b82f6]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Strain</span>
-          </div>
-
-          <div class="px-3 py-1 rounded-md bg-[#15803d]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#15803d]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Recovery</span>
-          </div>
-
-          <div class="relative group cursor-help">
-            <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
-              <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
-              <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
-              <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
+<div class="max-w-screen-2xl mx-auto my-4">
+  <p-accordion [value]="['wwd', 'strain', 'wday', 'efficiency']" styleClass="p-0" [multiple]="true"
+    transitionOptions="0s">
+    <p-accordion-panel value="wwd" class="px-4">
+      <p-card styleClass="p-4">
+        <p-accordion-header>
+          <ng-template #toggleicon let-active="active">
+            @if (active) {
+            <i class="pi pi-minus ml-2"></i>
+            } @else {
+            <i class="pi pi-plus ml-2"></i>
+            }
+          </ng-template>
+          <div class="flex grow flex-col md:flex-row gap-2 justify-between items-center">
+            <div class="flex items-end gap-1">
+              <h1 class="text-2xl font-bold text-gray-900 mb-0">Weekly duration</h1>
+              <span class="text-xs text-gray-400">yearly</span>
             </div>
 
-            <div
-              class="absolute invisible opacity-0 group-hover:visible group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
-              <div
-                class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
-                      <path clip-rule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        fill-rule="evenodd"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+            <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+              @defer {
+              @for (c of (categories$ | async); track c.id) {
+              <div class="px-3 py-1 rounded-md dark:bg-white/10 inline-flex items-center gap-2"
+                [style.backgroundColor]="c.color + '1A'">
+                <span class="w-2 h-2 rounded-md" [style.backgroundColor]="c.color"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0 capitalize">{{ c.name }}</span>
+              </div>
+              }
+              } @placeholder (minimum 0.7s) {
+              @for (_ of [1,2,3,4]; track _) {
+              <p-skeleton height="2rem" width="6rem"></p-skeleton>
+              }
+              }
+            </div>
+          </div>
+        </p-accordion-header>
+
+        <p-accordion-content>
+          <div class="mt-4">
+            @defer {
+            @if (totalWorkoutsHours && categoryDurationPerWeek.labels.length) {
+            <p-chart type="bar" [data]="categoryDurationPerWeek" [options]="stackedGraphOptions" />
+            } @else {
+            <div class="flex justify-center mt-4">
+              <div class="p-4">
+                <h2 class="mb-0 text-2xl tracking-tight text-center font-semibold text-gray-900">
+                  Nothing to see yet
+                </h2>
+                <p class="mt-4 font-light text-center text-gray-500">
+                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no workouts duration
+                </p>
+              </div>
+            </div>
+            }
+            } @placeholder (minimum 0.7s) {
+            <p-skeleton height="20rem"></p-skeleton>
+            }
+          </div>
+        </p-accordion-content>
+      </p-card>
+    </p-accordion-panel>
+
+    <p-accordion-panel value="strain" class="px-4 mt-4">
+      <p-card styleClass="p-4">
+        <p-accordion-header>
+          <ng-template #toggleicon let-active="active">
+            @if (active) {
+            <i class="pi pi-minus ml-2"></i>
+            } @else {
+            <i class="pi pi-plus ml-2"></i>
+            }
+          </ng-template>
+          <div class="flex grow flex-col md:flex-row gap-2 justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-0">Strain / Recovery</h1>
+
+            <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+              <div class="px-3 py-1 rounded-md bg-[#3b82f6]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#3b82f6]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Strain</span>
+              </div>
+
+              <div class="px-3 py-1 rounded-md bg-[#15803d]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#15803d]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Recovery</span>
+              </div>
+
+              <div class="relative group cursor-help">
+                <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
+                  <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
+                  <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
                 </div>
 
-                <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
-                  <span>Heart Rate Variability (HRV) is a non-invasive biomarker
-                    commonly used to monitor recovery and autonomic nervous system balance.
-                  </span>
-                  <span>
-                    Trends in HRV can reflect an individual's physiological adaptation:
-                  </span>
-                  <span class="flex items-center gap-2">
-                    <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better recovery
-                    and resilience to
-                    stress
-                  </span>
-                  <span class="flex items-center gap-2">
-                    <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or insufficient
-                    recovery
-                  </span>
-                  <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                <div
+                  class="absolute hidden opacity-0 group-hover:block group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
+                  <div
+                    class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
+                          <path clip-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            fill-rule="evenodd"></path>
+                        </svg>
+                      </div>
+                      <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+                    </div>
+
+                    <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
+                      <span>Heart Rate Variability (HRV) is a non-invasive biomarker
+                        commonly used to monitor recovery and autonomic nervous system balance.
+                      </span>
+                      <span>
+                        Trends in HRV can reflect an individual's physiological adaptation:
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better
+                        recovery
+                        and resilience to
+                        stress
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or
+                        insufficient
+                        recovery
+                      </span>
+                      <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </p-accordion-header>
 
-      <div class="mt-4">
-        @defer {
-        @if (strainRecoveryComboGraph.labels.length) {
-        <p-chart type="line" [data]="strainRecoveryComboGraph" [options]="comboGraphOptions" />
-        } @else {
-        <div class="flex justify-center mt-4">
-          <div class="p-4">
-            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
-              Nothing to see yet
-            </h2>
-            <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no Whoop data
-            </p>
-          </div>
-        </div>
-        }
-        } @placeholder (minimum 0.7s) {
-        <p-skeleton height="20rem"></p-skeleton>
-        }
-      </div>
-    </div>
-  </p-card>
-</div>
-
-<div class="max-w-screen-2xl mx-auto px-4 m-4">
-  <p-card>
-    <div class="p-4">
-      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep / Recovery</h1>
-
-        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
-          <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
-          </div>
-
-          <div class="px-3 py-1 rounded-md bg-[#a52a2a]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#a52a2a]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Resting HR</span>
-          </div>
-
-          <div class="relative group cursor-help">
-            <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
-              <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
-              <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
-              <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
+        <p-accordion-content>
+          <div class="mt-4">
+            @defer {
+            @if (strainRecoveryComboGraph.labels.length) {
+            <p-chart type="line" [data]="strainRecoveryComboGraph" [options]="strainRecoveryComboGraphOptions" />
+            } @else {
+            <div class="flex justify-center mt-4">
+              <div class="p-4">
+                <h2 class="mb-0 text-2xl tracking-tight text-center font-semibold text-gray-900">
+                  Nothing to see yet
+                </h2>
+                <p class="mt-4 font-light text-center text-gray-500">
+                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no data
+                </p>
+              </div>
             </div>
+            }
+            } @placeholder (minimum 0.7s) {
+            <p-skeleton height="20rem"></p-skeleton>
+            }
+          </div>
+        </p-accordion-content>
+      </p-card>
+    </p-accordion-panel>
 
-            <div
-              class="absolute invisible opacity-0 group-hover:visible group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
-              <div
-                class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
-                      <path clip-rule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        fill-rule="evenodd"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+    <p-accordion-panel value="wday" class="px-4 mt-4">
+      <p-card styleClass="p-4">
+        <p-accordion-header>
+          <ng-template #toggleicon let-active="active">
+            @if (active) {
+            <i class="pi pi-minus ml-2"></i>
+            } @else {
+            <i class="pi pi-plus ml-2"></i>
+            }
+          </ng-template>
+          <div class="flex grow flex-col md:flex-row gap-2 justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-0">Weekday distribution</h1>
+          </div>
+        </p-accordion-header>
+
+        <p-accordion-content>
+          <div class="mt-4">
+            @defer {
+            @if (weekdayComboGraph.labels.length) {
+            <p-chart type="bar" [data]="weekdayComboGraph" [options]="weekdayComboGraphOptions" />
+            } @else {
+            <div class="flex justify-center mt-4">
+              <div class="p-4">
+                <h2 class="mb-0 text-2xl tracking-tight text-center font-semibold text-gray-900">
+                  Nothing to see yet
+                </h2>
+                <p class="mt-4 font-light text-center text-gray-500">
+                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no workouts duration
+                </p>
+              </div>
+            </div>
+            }
+            } @placeholder (minimum 0.7s) {
+            <p-skeleton height="20rem"></p-skeleton>
+            }
+          </div>
+        </p-accordion-content>
+      </p-card>
+    </p-accordion-panel>
+
+    <p-accordion-panel value="recovery" class="px-4 mt-4">
+      <p-card styleClass="p-4">
+        <p-accordion-header>
+          <ng-template #toggleicon let-active="active">
+            @if (active) {
+            <i class="pi pi-minus ml-2"></i>
+            } @else {
+            <i class="pi pi-plus ml-2"></i>
+            }
+          </ng-template>
+          <div class="flex grow flex-col md:flex-row gap-2 justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep / Recovery</h1>
+
+            <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+              <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
+              </div>
+
+              <div class="px-3 py-1 rounded-md bg-[#a52a2a]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#a52a2a]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Resting HR</span>
+              </div>
+
+              <div class="relative group cursor-help">
+                <div class="px-3 py-1 rounded-md bg-[#b78bc9]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-md bg-[#b78bc9]"></span>
+                  <span class="text-sm font-medium text-surface-950 dark:text-surface-0">HRV</span>
+                  <span class="absolute top-1 right-1 size-1.5 bg-black rounded-full"></span>
                 </div>
 
-                <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
-                  <span>Heart Rate Variability (HRV) is a non-invasive biomarker
-                    commonly used to monitor recovery and autonomic nervous system balance.
-                  </span>
-                  <span>
-                    Trends in HRV can reflect an individual's physiological adaptation:
-                  </span>
-                  <span class="flex items-center gap-2">
-                    <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better recovery
-                    and resilience to
-                    stress
-                  </span>
-                  <span class="flex items-center gap-2">
-                    <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or insufficient
-                    recovery
-                  </span>
-                  <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                <div
+                  class="absolute hidden opacity-0 group-hover:block group-hover:opacity-100 top-full z-50 left-1/2 -translate-x-1/2 mb-3 w-72 transition-all duration-300 ease-out transform group-hover:translate-y-2 -translate-y-2">
+                  <div
+                    class="relative p-4 bg-gradient-to-br bg-gray-900/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-indigo-400">
+                          <path clip-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            fill-rule="evenodd"></path>
+                        </svg>
+                      </div>
+                      <h3 class="text-sm font-semibold text-white">Heart Rate Variability</h3>
+                    </div>
+
+                    <div class="flex flex-col space-y-2 text-sm text-gray-300 select-none">
+                      <span>Heart Rate Variability (HRV) is a non-invasive biomarker
+                        commonly used to monitor recovery and autonomic nervous system balance.
+                      </span>
+                      <span>
+                        Trends in HRV can reflect an individual's physiological adaptation:
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <i class="text-green-500 pi pi-arrow-up-right"></i> is generally associated with better
+                        recovery
+                        and resilience to
+                        stress
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <i class="text-red-500 pi pi-arrow-down-right"></i> may indicate fatigue, stress, or
+                        insufficient
+                        recovery
+                      </span>
+                      <span class="text-center">HRV is just a marker.<br><b>Always contextualize</b></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </p-accordion-header>
 
-      <div class="mt-4">
-        @defer {
-        @if (sleepRecoveryComboGraph.labels.length) {
-        <p-chart type="line" [data]="sleepRecoveryComboGraph" [options]="sleepRecoveryComboGraphOptions" />
-        } @else {
-        <div class="flex justify-center mt-4">
-          <div class="p-4">
-            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
-              Nothing to see yet
-            </h2>
-            <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no sleep / recovery data
-            </p>
+        <p-accordion-content>
+          <div class="mt-4">
+            @defer {
+            @if (sleepRecoveryComboGraph.labels.length) {
+            <p-chart type="line" [data]="sleepRecoveryComboGraph" [options]="sleepRecoveryComboGraphOptions" />
+            } @else {
+            <div class="flex justify-center mt-4">
+              <div class="p-4">
+                <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
+                  Nothing to see yet
+                </h2>
+                <p class="mt-4 font-light text-center text-gray-500">
+                  {{ selectedMonth.year }} {{ yearlyView ? '-' : getMonthName() }} has no sleep / recovery data
+                </p>
+              </div>
+            </div>
+            }
+            } @placeholder (minimum 0.7s) {
+            <p-skeleton height="20rem"></p-skeleton>
+            }
           </div>
-        </div>
-        }
-        } @placeholder (minimum 0.7s) {
-        <p-skeleton height="20rem"></p-skeleton>
-        }
-      </div>
-    </div>
-  </p-card>
-</div>
+        </p-accordion-content>
+      </p-card>
+    </p-accordion-panel>
 
-<div class="max-w-screen-2xl mx-auto px-4 m-4">
-  <p-card>
-    <div class="p-4">
-      <div class="flex flex-col md:flex-row gap-2 justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep efficiency</h1>
+    <p-accordion-panel value="efficiency" class="px-4 mt-4">
+      <p-card styleClass="p-4">
+        <p-accordion-header>
+          <ng-template #toggleicon let-active="active">
+            @if (active) {
+            <i class="pi pi-minus ml-2"></i>
+            } @else {
+            <i class="pi pi-plus ml-2"></i>
+            }
+          </ng-template>
+          <div class="flex grow flex-col md:flex-row gap-2 justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-0">Sleep efficiency</h1>
 
-        <div class="flex flex-wrap justify-center gap-2 items-center select-none">
-          <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
+            <div class="flex flex-wrap justify-center gap-2 items-center select-none">
+              <div class="px-3 py-1 rounded-md bg-[#1f9250]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#1f9250]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Sleep</span>
+              </div>
+
+              <div class="px-3 py-1 rounded-md bg-[#bedbed]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#bedbed]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Bed Time</span>
+              </div>
+
+              <div class="px-3 py-1 rounded-md bg-[#F9D976]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#F9D976]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Wake Time</span>
+              </div>
+
+              <div class="px-3 py-1 rounded-md bg-[#B6BCC4]/10 dark:bg-white/10 inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-md bg-[#B6BCC4]"></span>
+                <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Efficiency</span>
+              </div>
+            </div>
           </div>
+        </p-accordion-header>
 
-          <div class="px-3 py-1 rounded-md bg-[#bedbed]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#bedbed]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Bed Time</span>
+        <p-accordion-content>
+          <div class="mt-4">
+            @defer {
+            @if (sleepEfficiencyComboGraph.labels.length) {
+            <p-chart type="line" [data]="sleepEfficiencyComboGraph" [options]="sleepEfficiencyComboGraphOptions" />
+            } @else {
+            <div class="flex justify-center mt-4">
+              <div class="p-4">
+                <h2 class="mb-0 text-2xl tracking-tight text-center font-semibold text-gray-900">
+                  Nothing to see yet
+                </h2>
+                <p class="mt-4 font-light text-center text-gray-500">
+                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no sleep efficiency data
+                </p>
+              </div>
+            </div>
+            }
+            } @placeholder (minimum 0.7s) {
+            <p-skeleton height="20rem"></p-skeleton>
+            }
           </div>
-
-          <div class="px-3 py-1 rounded-md bg-[#F9D976]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#F9D976]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Wake Time</span>
-          </div>
-
-          <div class="px-3 py-1 rounded-md bg-[#B6BCC4]/10 dark:bg-white/10 inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-md bg-[#B6BCC4]"></span>
-            <span class="text-sm font-medium text-surface-950 dark:text-surface-0">Efficiency</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-4">
-        @defer {
-        @if (sleepEfficiencyComboGraph.labels.length) {
-        <p-chart type="line" [data]="sleepEfficiencyComboGraph" [options]="sleepEfficiencyComboGraphOptions" />
-        } @else {
-        <div class="flex justify-center mt-4">
-          <div class="p-4">
-            <h2 class="mb-0 text-2xl tracking-tight font-semibold text-gray-900">
-              Nothing to see yet
-            </h2>
-            <p class="mt-4 font-light text-center text-gray-500">
-              {{ year }} {{ yearlyView ? '-' : getMonthName() }} has no sleep efficiency data
-            </p>
-          </div>
-        </div>
-        }
-        } @placeholder (minimum 0.7s) {
-        <p-skeleton height="20rem"></p-skeleton>
-        }
-      </div>
-    </div>
-  </p-card>
+        </p-accordion-content>
+      </p-card>
+    </p-accordion-panel>
+  </p-accordion>
 </div>

@@ -1,30 +1,25 @@
+import json
 from typing import Annotated
 
+import httpx
 import jwt
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import select
-import json
-import httpx
+
 from ..config import settings
 from ..db.core import init_user_data
 from ..deps import SessionDep, get_current_username
-from ..models.models import (
-    LoginRegisterModel,
-    AuthParams,
-    Token,
-    UpdateUserPassword,
-    User,
-)
+from ..models.models import AuthParams, LoginRegisterModel, Token, UpdateUserPassword, User
 from ..security import (
     create_access_token,
     create_tokens,
-    hash_password,
-    verify_password,
     generate_mfa_secret,
+    hash_password,
     verify_mfa_code,
+    verify_password,
 )
-from ..utils.logging import app_logger
 from ..utils.date import dt_utc, dt_utc_offset
+from ..utils.logging import app_logger
 from ..utils.misc import generate_api_token
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
