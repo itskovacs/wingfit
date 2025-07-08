@@ -102,8 +102,7 @@ python -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-cd wingfit
-pip install -r requirements.txt
+pip install -r wingfit/requirements.txt
 
 # Run the backend, port :8000
 fastapi run wingfit/main.py
