@@ -68,10 +68,16 @@ export function processWeekdayDurationsData(
     const sorted = new Float64Array(data).sort();
 
     avgs.push(Math.round(data.reduce((a, b) => a + b, 0) / data.length));
-    q.push([
-      Math.round(getQuartile(0.25, sorted) || 0),
-      Math.round(getQuartile(0.75, sorted) || 0),
-    ]);
+    if (yearlyView) {
+      q.push([
+        Math.round(getQuartile(0.25, sorted) || 0),
+        Math.round(getQuartile(0.75, sorted) || 0),
+      ]);
+    } else {
+      if (sorted.length >= 2) q.push([sorted[0], sorted[sorted.length - 1]]);
+      else if (sorted.length == 1) q.push([sorted[0], sorted[0]]);
+      else q.push([0, 0]);
+    }
   });
 
   const weekdayComboGraph = {
@@ -83,7 +89,7 @@ export function processWeekdayDurationsData(
         data: q.map((qArray, index) => ({
           x: qArray,
           y: index,
-          dValue: `${minutesToHour(qArray[0])}h - ${minutesToHour(qArray[1])}h`,
+          dValue: `${minutesToHour(qArray[0])} - ${minutesToHour(qArray[1])}`,
         })),
         borderColor: '#6495ED',
         backgroundColor: '#6495ED',
