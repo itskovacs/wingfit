@@ -44,6 +44,13 @@ Demo is worth a thousand words, head to 📸 [Demo](#Demo).
 These steps will guide to deploy the app, ready to use in ⏱️ minutes.  
 If you need help, feel free to open an [issue](https://github.com/itskovacs/wingfit/issues).
 
+> [!NOTE]
+> Packages are available in the [packages section](https://github.com/itskovacs/wingfit/pkgs/container/wingfit) of the repository for quickstart
+
+```bash
+docker run -p 8080:8000 -v wf-storage:/app/storage ghcr.io/itskovacs/wingfit:5
+```
+
 ### Preparation
 
 Clone the repo, you're one step away from being all set

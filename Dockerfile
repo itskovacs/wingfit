@@ -15,3 +15,4 @@ RUN pip install -r wingfit/requirements.txt
 # Copy to /app/frontend, where /app has the backend python files also
 COPY --from=build /app/dist/wingfit/browser ./frontend
 EXPOSE 8080
+CMD ["fastapi", "run", "/app/wingfit/main.py", "--host", "0.0.0.0", "--port", "8000"]
