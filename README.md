@@ -27,7 +27,6 @@
 - 📜 [License](#License)
 - 🤝 [Contributing](#Contributing)
 - 🛠️ [Tech Stack](#techstack)
-- ✍️ [Authors](#authors)
 
 ## 📦 About <a name = "about"></a>
 
@@ -41,94 +40,17 @@ Demo is worth a thousand words, head to 📸 [Demo](#Demo).
 
 ## 🌱 Getting Started <a name = "getting_started"></a>
 
-These steps will guide to deploy the app, ready to use in ⏱️ minutes.  
 If you need help, feel free to open an [issue](https://github.com/itskovacs/wingfit/issues).
 
-> [!NOTE]
-> Packages are available in the [packages section](https://github.com/itskovacs/wingfit/pkgs/container/wingfit) of the repository for quickstart
-
 ```bash
-docker run -p 8080:8000 -v wf-storage:/app/storage ghcr.io/itskovacs/wingfit:5
+# Ensure you have the latest image
+docker pull ghcr.io/itskovacs/wingfit:5
+
+# Run the container
+docker run -d -p 8080:8000 -v ./storage:/app/storage ghcr.io/itskovacs/wingfit:5
 ```
 
-### Preparation
-
-Clone the repo, you're one step away from being all set
-
-```bash
-git clone https://github.com/itskovacs/wingfit.git
-cd wingfit
-```
-
-### Docker 🐳 (recommended)
-
-If needed, edit `docker-compose.yml` to modify the mapped port (default is `127.0.0.1:8080`).
-
-Run the container, head to Wingfit website, create an account, enjoy ✅
-
-```bash
-docker compose up -d
-```
-
-<br>
-
-### Serving the content
-You can serve Wingfit using a web server, eg: Nginx
-```nginx
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-
-    server_name wingfit.lan; # Your wingfit domain
-
-    location / {
-        proxy_pass http://localhost:8080; # Wingfit port, default is 8080
-        proxy_set_header Host               $host;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto  $scheme;
-        proxy_set_header Upgrade            $http_upgrade;
-        proxy_set_header Connection         "upgrade";
-    }
-}
-```
-
-
-### Sources 👩‍💻
-
-Install from sources and run the backend.
-Build the frontend and serve it with the web server.
-
-**backend**
-
-```bash
-cd backend
-
-# Source virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r wingfit/requirements.txt
-
-# Run the backend, port :8000
-fastapi run wingfit/main.py
-```
-
-**frontend**
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Build the frontend
-npm build
-
-# Copy the build to your static web server directory
-cp -r dist/wingfit/browser /var/www/html
-```
+Refer to the [configuration documentation](https://github.com/itskovacs/wingfit/tree/main/docs/config.md) to set up OIDC authentication and other settings.
 
 <br>
 
@@ -188,15 +110,10 @@ Contributions are welcome! Feel free to open issues if you find bugs and pull re
 
 <br>
 
-## ✍️ Authors <a name = "authors"></a>
-
-- [@itskovacs](https://github.com/itskovacs)
-
-<br>
-
 <div align="center">
 
 If you like Wingfit, consider giving it a **star** ⭐!  
-Made with ❤️ in BZH
+Made with ❤️ in BZH  
 
+<a href='https://ko-fi.com/itskovacs' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>  
 </div>
