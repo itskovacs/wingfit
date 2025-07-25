@@ -7,26 +7,15 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from ..deps import SessionDep, get_current_username
-from ..models.models import (
-    BlocCategory,
-    Image,
-    Program,
-    ProgramCreate,
-    ProgramRead,
-    ProgramReadComplete,
-    ProgramStep,
-    ProgramStepBloc,
-    ProgramStepBlocCreate,
-    ProgramStepBlocRead,
-    ProgramStepBlocUpdate,
-    ProgramStepCreate,
-    ProgramStepRead,
-    ProgramStepUpdate,
-    ProgramStepWithBlocsRead,
-    ProgramUpdate,
-)
+from ..models.models import (BlocCategory, Image, Program, ProgramCreate,
+                             ProgramRead, ProgramReadComplete, ProgramStep,
+                             ProgramStepBloc, ProgramStepBlocCreate,
+                             ProgramStepBlocRead, ProgramStepBlocUpdate,
+                             ProgramStepCreate, ProgramStepRead,
+                             ProgramStepUpdate, ProgramStepWithBlocsRead,
+                             ProgramUpdate)
 from ..security import verify_exists_and_owns
-from ..utils.file import read_image, remove_image, save_image
+from ..utils.file import read_image, remove_image, save_image_to_file
 from ..utils.logging import app_logger
 from ..utils.misc import b64e, b64img_decode
 
@@ -66,9 +55,10 @@ async def import_program(session, current_user, data) -> Program:
         user=current_user,
     )
 
-    if data.get("image"):
-        image_bytes = b64img_decode(data.get("image"))
-        filename = save_image(image_bytes, 400)
+    image = data.pop("image", None)
+    if image:
+        image_bytes = b64img_decode(image)
+        filename = save_image_to_file(image_bytes, 400)
         if not filename:
             app_logger.error(f"[import_program][{current_user}] Image saving error, check logs")
             raise HTTPException(status_code=400, detail="Bad request")
@@ -159,7 +149,7 @@ async def post_program(
 
     if program_data.image:
         image_bytes = b64img_decode(program_data.image)
-        filename = save_image(image_bytes, 400)
+        filename = save_image_to_file(image_bytes, 400)
         if not filename:
             app_logger.error(f"[post_program][{current_user}] Image saving error, check logs")
             raise HTTPException(status_code=400, detail="Bad request")
@@ -197,9 +187,10 @@ async def put_program(
         program_data.pop("image", None)  # Ensure consistency
         remove_previous_image = True
 
-    if program_data.get("image"):
-        image_bytes = b64img_decode(program_data.get("image"))
-        filename = save_image(image_bytes, 400)
+    image = program_data.pop("image", None)
+    if image:
+        image_bytes = b64img_decode(image)
+        filename = save_image_to_file(image_bytes, 400)
         if not filename:
             app_logger.error(f"[put_program][{current_user}] Image saving error, check logs")
             raise HTTPException(status_code=400, detail="Bad request")

@@ -21,7 +21,11 @@ def assets_folder_path() -> Path:
 
 def remove_image(path: str):
     try:
-        Path(assets_folder_path() / path).unlink()
+        fpath = Path(assets_folder_path() / path)
+        if not fpath.exists():
+            # Skips missing file
+            return
+        fpath.unlink()
     except OSError as exc:
         raise Exception("Error deleting image:", exc, path)
 
@@ -67,7 +71,41 @@ async def download_file(link: str) -> str:
         )
 
 
-def save_image(content: bytes, size: int = 128) -> str:
+def patch_image(fp: str, size: int = 400) -> bool:
+    try:
+        with Image.open(fp) as im:
+            if im.mode not in ("RGB", "RGBA"):
+                im = im.convert("RGB")
+
+            # Resize and crop to square of size x size
+            if size > 0:
+                im_ratio = im.width / im.height
+
+                if im_ratio > 1:
+                    new_height = size
+                    new_width = int(size * im_ratio)
+                else:
+                    new_width = size
+                    new_height = int(size / im_ratio)
+
+                im = im.resize((new_width, new_height), Image.LANCZOS)
+
+                left = (im.width - size) // 2
+                top = (im.height - size) // 2
+                right = left + size
+                bottom = top + size
+
+                im = im.crop((left, top, right, bottom))
+
+            im.save(fp)
+            return True
+
+    except Exception:
+        ...
+    return False
+
+
+def save_image_to_file(content: bytes, size: int = 600) -> str:
     try:
         with Image.open(BytesIO(content)) as im:
             if im.mode not in ("RGB", "RGBA"):
@@ -108,6 +146,6 @@ def save_image(content: bytes, size: int = 128) -> str:
 
             return filename
 
-    except Exception as exc:
-        app_logger.error(f"[save_image] Exception: {exc}")
+    except Exception:
+        ...
     return ""

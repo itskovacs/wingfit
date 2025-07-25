@@ -10,7 +10,8 @@ from sqlalchemy.sql import extract
 from sqlmodel import func, select
 
 from ..deps import SessionDep, get_current_username
-from ..models.models import Bloc, BlocCategory, BlocRead, HealthWatchData, HealthWatchDataRead
+from ..models.models import (Bloc, BlocCategory, BlocRead, HealthWatchData,
+                             HealthWatchDataRead)
 from ..utils.date import parse_str_or_date_to_date
 from ..utils.file import download_file, upload_f_to_tempfile
 from ..utils.logging import app_logger
@@ -211,7 +212,9 @@ async def post_whoop_archive(
     }  # {date: HealthWatchData}
 
     inserted = 0
-    ext = file.filename.split(".")[-1]
+    ext = None
+    if file:
+        ext = file.filename.split(".")[-1]
     if link or ext == "zip":
         with zipfile.ZipFile(temporary_fp, "r") as whoop_archive:
             if "physiological_cycles.csv" not in whoop_archive.namelist():

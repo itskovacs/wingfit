@@ -2,6 +2,10 @@ import json
 from datetime import datetime
 
 
+def _to_iso(s: str) -> str:
+    return datetime.strptime(s, "%Y-%m-%d %H:%M:%S %z").isoformat()
+
+
 def mywhoop_normalize(data) -> dict:
     data = json.loads(data)
 
@@ -67,7 +71,6 @@ def applewatch_normalize(data) -> dict:
         "heart_rate_variability": "hrv",
         "sleep_analysis": "__",
     }
-    to_iso = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M:%S %z").isoformat()
 
     normalized_data = {}
 
@@ -92,8 +95,8 @@ def applewatch_normalize(data) -> dict:
                 if not sleep_asleep:
                     continue
 
-                sleep_start = to_iso(d.get("sleepStart"))
-                sleep_end = to_iso(d.get("sleepEnd"))
+                sleep_start = _to_iso(d.get("sleepStart"))
+                sleep_end = _to_iso(d.get("sleepEnd"))
                 sleep_total = sleep_asleep + round(d.get("awake") * 60)
 
                 normalized_data.setdefault(date, {})["sleep_asleep"] = sleep_asleep

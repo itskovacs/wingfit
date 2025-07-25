@@ -8,19 +8,9 @@ from sqlmodel import select
 
 from .. import __version__
 from ..deps import SessionDep, get_current_username
-from ..models.models import (
-    PR,
-    Bloc,
-    BlocCategory,
-    BlocCategoryRead,
-    BlocRead,
-    HealthWatchData,
-    HealthWatchDataRead,
-    Program,
-    PRRead,
-    User,
-    UserRead,
-)
+from ..models.models import (PR, Bloc, BlocCategory, BlocCategoryRead,
+                             BlocRead, HealthWatchData, HealthWatchDataRead,
+                             Program, PRRead, User, UserRead)
 from ..security import generate_mfa_secret, verify_mfa_code
 from ..utils.misc import check_update, generate_api_token
 from .programs import export_program
@@ -82,8 +72,8 @@ async def export_user_data(
 
 
 @router.get("/checkversion")
-def check_version(session: SessionDep, current_user: Annotated[str, Depends(get_current_username)]):
-    return check_update()
+async def check_version(session: SessionDep, current_user: Annotated[str, Depends(get_current_username)]):
+    return await check_update()
 
 
 @router.put("/api_token")

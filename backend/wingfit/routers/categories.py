@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
 from ..deps import SessionDep, get_current_username
-from ..models.models import BlocCategory, BlocCategoryCreate, BlocCategoryRead, BlocCategoryUpdate
+from ..models.models import (BlocCategory, BlocCategoryCreate,
+                             BlocCategoryRead, BlocCategoryUpdate)
 from ..security import verify_exists_and_owns
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])

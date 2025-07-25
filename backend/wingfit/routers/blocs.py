@@ -4,16 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from ..deps import SessionDep, get_current_username, get_username_with_token_support
-from ..models.models import (
-    Bloc,
-    BlocCreate,
-    BlocRead,
-    BlocResult,
-    BlocResultBase,
-    BlocResultRead,
-    BlocUpdate,
-)
+from ..deps import (SessionDep, get_current_username,
+                    get_username_with_token_support)
+from ..models.models import (Bloc, BlocCreate, BlocRead, BlocResult,
+                             BlocResultBase, BlocResultRead, BlocUpdate)
 from ..security import verify_exists_and_owns
 from ..utils.date import parse_str_or_date_to_date
 from ..utils.logging import app_logger

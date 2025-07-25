@@ -6,16 +6,8 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from ..deps import SessionDep, get_current_username
-from ..models.models import (
-    PR,
-    PRCreate,
-    PRRead,
-    PRUpdate,
-    PRValue,
-    PRValueCreateOrUpdate,
-    PRValueRead,
-    ResultKeyEnum,
-)
+from ..models.models import (PR, PRCreate, PRRead, PRUpdate, PRValue,
+                             PRValueCreateOrUpdate, PRValueRead, ResultKeyEnum)
 from ..security import verify_exists_and_owns
 from ..utils.date import parse_str_or_date_to_date
 from ..utils.logging import app_logger
