@@ -27,7 +27,6 @@ export class BaseLayoutComponent {
     { routerLink: '/home', text: 'Dashboard' },
     { routerLink: '/programs', text: 'Programs' },
     { routerLink: '/pr', text: 'PR' },
-    { routerLink: '/assistant', text: 'Assistant' },
     { routerLink: '/statistics', text: 'Statistics' },
   ];
   userMenuItems: MenuItem[] | undefined;

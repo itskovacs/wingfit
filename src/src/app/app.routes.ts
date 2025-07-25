@@ -8,7 +8,6 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { ProgramsComponent } from './components/programs/programs.component';
 import { ProgramComponent } from './components/program/program.component';
 import { StatisticsComponent } from './components/statistics/statistics.component';
-import { AssistantComponent } from './components/assistant/assistant.component';
 import { AuthGuard } from './services/auth.guard';
 import { StashComponent } from './components/stash/stash.component';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
@@ -45,11 +44,6 @@ export const routes: Routes = [
         path: 'settings',
         component: SettingsComponent,
         title: 'Wingfit - Settings',
-      },
-      {
-        path: 'assistant',
-        component: AssistantComponent,
-        title: 'Wingfit - Assistant',
       },
       {
         path: 'statistics',
