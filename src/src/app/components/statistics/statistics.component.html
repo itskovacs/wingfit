@@ -258,8 +258,8 @@
         <div class="relative h-2 w-full">
           @if (averageRecovery) {
           <div class="absolute -top-0.5 z-20 h-3 rounded-sm border border-dashed border-gray-500 dark:border-gray-200"
-            [style.left]="recoveryGauge.q_start_pct+'%'"
-            [title]="'From ' + recoveryGauge.q_start_pct + '% to ' + recoveryGauge.q_end_pct + '%'"
+            [style.left]="(recoveryGauge.q_start_pct * recoveryGauge.last)/100+'%'"
+            [title]="'From ' + (recoveryGauge.q_start_pct * recoveryGauge.last)/100 + '% to ' + (recoveryGauge.q_end_pct * recoveryGauge.last)/100 + '%'"
             [style.width]="(recoveryGauge.q_end_pct - recoveryGauge.q_start_pct) + '%'"></div>
           }
 
@@ -272,8 +272,8 @@
             <div class="absolute top-[-4px] z-30 w-1 h-4 rounded ring-1 ring-white ring-offset-0"
               [class.!bg-red-500]="averageRecovery > 0 && averageRecovery < 33"
               [class.!bg-yellow-400]="averageRecovery >= 33 && averageRecovery < 67"
-              [class.!bg-emerald-500]="averageRecovery >= 67" [style.left]="recoveryGauge.average_pct+'%'"
-              [title]="averageRecovery"></div>
+              [class.!bg-emerald-500]="averageRecovery >= 67"
+              [style.left]="(recoveryGauge.average_pct * recoveryGauge.last)/100+'%'" [title]="averageRecovery"></div>
             }
           </div>
         </div>
@@ -458,7 +458,7 @@
                   Nothing to see yet
                 </h2>
                 <p class="mt-4 font-light text-center text-gray-500">
-                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no workouts duration
+                  {{ selectedMonth.year }} has no workouts duration
                 </p>
               </div>
             </div>
@@ -471,6 +471,7 @@
       </p-card>
     </p-accordion-panel>
 
+    @if (strainRecoveryComboGraph) {
     <p-accordion-panel value="strain" class="px-4 mt-4">
       <p-card styleClass="p-4">
         <p-accordion-header>
@@ -546,28 +547,12 @@
 
         <p-accordion-content>
           <div class="mt-4">
-            @defer {
-            @if (strainRecoveryComboGraph.labels.length) {
             <p-chart type="line" [data]="strainRecoveryComboGraph" [options]="strainRecoveryComboGraphOptions" />
-            } @else {
-            <div class="flex justify-center mt-4">
-              <div class="p-4">
-                <h2 class="mb-0 text-2xl tracking-tight text-center font-semibold text-gray-900">
-                  Nothing to see yet
-                </h2>
-                <p class="mt-4 font-light text-center text-gray-500">
-                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no data
-                </p>
-              </div>
-            </div>
-            }
-            } @placeholder (minimum 0.7s) {
-            <p-skeleton height="20rem"></p-skeleton>
-            }
           </div>
         </p-accordion-content>
       </p-card>
     </p-accordion-panel>
+    }
 
     <p-accordion-panel value="wday" class="px-4 mt-4">
       <p-card styleClass="p-4">
@@ -587,6 +572,7 @@
         <p-accordion-content>
           <div class="mt-4">
             @defer {
+            {{ weekdayComboGraph.labels.length }}
             @if (weekdayComboGraph.labels.length) {
             <p-chart type="bar" [data]="weekdayComboGraph" [options]="weekdayComboGraphOptions" />
             } @else {
@@ -596,7 +582,7 @@
                   Nothing to see yet
                 </h2>
                 <p class="mt-4 font-light text-center text-gray-500">
-                  {{ selectedMonth.year }} {{ yearlyView ? '' : getMonthName() }} has no workouts duration
+                  {{ selectedMonth.year }} has no workouts duration
                 </p>
               </div>
             </div>

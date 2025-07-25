@@ -43,31 +43,31 @@ export function processHealthData(
 
   const sleep_asleep = currentSlice
     .map((d) => d.sleep_asleep)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const sleep_start = currentSlice
     .map((d) => normalizeSleepStr(d.sleep_start))
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const whoop_sleepscore = currentSlice
     .map((d) => d.whoop_sleepscore)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const sleep_end = currentSlice
     .map((d) => normalizeSleepStr(d.sleep_end, 0))
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const sleep_total = currentSlice
     .map((d) => d.sleep_total)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const hrv = currentSlice
     .map((d) => d.hrv)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const strain = currentSlice
     .map((d) => d.whoop_strain)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const recovery = currentSlice
     .map((d) => d.whoop_recovery)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
   const restingHR = currentSlice
     .map((d) => d.hr_resting)
-    .filter((n): n is number => n !== undefined);
+    .filter((n) => n !== undefined && n !== null);
 
   const avg = (arr: number[]) =>
     arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -98,19 +98,19 @@ export function processHealthData(
   if (previousSlice && previousSlice.length > 0) {
     const previous_sleep_total = previousSlice
       .map((d) => d.sleep_total)
-      .filter((n): n is number => n !== undefined);
+      .filter((n) => n !== undefined && n !== null);
     const previoushrv = previousSlice
       .map((d) => d.hrv)
-      .filter((n): n is number => n !== undefined);
+      .filter((n) => n !== undefined && n !== null);
     const previousstrain = previousSlice
       .map((d) => d.whoop_strain)
-      .filter((n): n is number => n !== undefined);
+      .filter((n) => n !== undefined && n !== null);
     const previousrecovery = previousSlice
       .map((d) => d.whoop_recovery)
-      .filter((n): n is number => n !== undefined);
+      .filter((n) => n !== undefined && n !== null);
     const previousrestingHR = previousSlice
       .map((d) => d.hr_resting)
-      .filter((n): n is number => n !== undefined);
+      .filter((n) => n !== undefined && n !== null);
 
     trends = {
       sleep_asleep: calculateTrend(sleep_total, previous_sleep_total, true),
@@ -140,72 +140,75 @@ export function processHealthData(
     {} as { [date: string]: string },
   );
 
-  const strainRecoveryComboGraph = {
-    labels,
-    datasets: [
-      {
-        label: 'Notes',
-        data: currentSlice.map((obj, index) => {
-          if (!(obj.cdate in parsedNotes)) return { x: index, y: null };
-          return {
+  let strainRecoveryComboGraph = undefined;
+  if (strain.length && recovery.length) {
+    strainRecoveryComboGraph = {
+      labels,
+      datasets: [
+        {
+          label: 'Notes',
+          data: currentSlice.map((obj, index) => {
+            if (!(obj.cdate in parsedNotes)) return { x: index, y: null };
+            return {
+              x: index,
+              y: 0,
+              content: parsedNotes[obj.cdate],
+            };
+          }),
+          pointBackgroundColor: '#909090',
+          pointRadius: 10,
+          showLine: false,
+          yAxisID: 'yNotes',
+        },
+        {
+          label: 'HRV',
+          data: hrv.map((hrv, index) => ({
             x: index,
-            y: 0,
-            content: parsedNotes[obj.cdate],
-          };
-        }),
-        pointBackgroundColor: '#909090',
-        pointRadius: 10,
-        showLine: false,
-        yAxisID: 'yNotes',
-      },
-      {
-        label: 'HRV',
-        data: hrv.map((hrv, index) => ({
-          x: index,
-          y: hrv,
-          unit: 'ms',
-        })),
-        yAxisID: 'yHRV',
-        borderColor: '#b78bc9',
-        backgroundColor: '#b78bc91A',
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0,
-        borderWidth: 1,
-      },
-      {
-        label: 'Whoop Strain™',
-        data: strain,
-        yAxisID: 'yStrain',
-        borderColor: '#3b82f6',
-        backgroundColor: '#3b82f61A',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 0,
-        borderWidth: 0,
-      },
-      {
-        label: 'Whoop Recovery™',
-        data: recovery,
-        yAxisID: 'yRecovery',
-        borderColor: '#15803d',
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0,
-        borderWidth: 2,
-        segment: {
-          borderColor: (ctx: any) => {
-            const value = ctx.p1.parsed.y;
-            return value >= 66
-              ? '#15803d'
-              : value >= 33
-                ? '#facc15'
-                : '#dc2626';
+            y: hrv,
+            unit: 'ms',
+          })),
+          yAxisID: 'yHRV',
+          borderColor: '#b78bc9',
+          backgroundColor: '#b78bc91A',
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0,
+          borderWidth: 1,
+        },
+        {
+          label: 'Whoop Strain™',
+          data: strain,
+          yAxisID: 'yStrain',
+          borderColor: '#3b82f6',
+          backgroundColor: '#3b82f61A',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 0,
+          borderWidth: 0,
+        },
+        {
+          label: 'Whoop Recovery™',
+          data: recovery,
+          yAxisID: 'yRecovery',
+          borderColor: '#15803d',
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0,
+          borderWidth: 2,
+          segment: {
+            borderColor: (ctx: any) => {
+              const value = ctx.p1.parsed.y;
+              return value >= 66
+                ? '#15803d'
+                : value >= 33
+                  ? '#facc15'
+                  : '#dc2626';
+            },
           },
         },
-      },
-    ],
-  };
+      ],
+    };
+  }
 
   const sleepRecoveryComboGraph = {
     labels,
