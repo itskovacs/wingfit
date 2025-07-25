@@ -1,17 +1,20 @@
 from datetime import UTC, datetime, timedelta
 
-import pyotp
 import jwt
+import pyotp
 from argon2 import PasswordHasher
 from argon2 import exceptions as argon_exceptions
+from authlib.integrations.httpx_client import OAuth2Client
 from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from .config import settings
 from .models.models import Token, User
 from .utils.logging import app_logger
+from .utils.misc import httpx_get
 
 ph = PasswordHasher()
+OIDC_CONFIG = {}
 
 
 def generate_mfa_secret() -> str:
@@ -81,3 +84,25 @@ def api_token_to_user(session: Session, api_token: str) -> User | None:
     if not user:
         raise HTTPException(status_code=401, detail="Invalid Token")
     return user
+
+
+def get_oidc_client():
+    return OAuth2Client(
+        client_id=settings.OIDC_CLIENT_ID,
+        client_secret=settings.OIDC_CLIENT_SECRET,
+        scope="openid profile",
+        redirect_uri=settings.OIDC_REDIRECT_URI,
+    )
+
+
+async def get_oidc_config():
+    global OIDC_CONFIG
+    if OIDC_CONFIG:
+        return OIDC_CONFIG
+
+    discovery_url = settings.OIDC_DISCOVERY_URL
+    if not discovery_url:
+        raise HTTPException(status_code=500, detail="OIDC_DISCOVERY_URL not configured")
+
+    OIDC_CONFIG = await httpx_get(discovery_url)
+    return OIDC_CONFIG

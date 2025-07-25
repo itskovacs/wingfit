@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
@@ -23,7 +22,6 @@ import { MessageModule } from 'primeng/message';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputOtpModule } from 'primeng/inputotp';
-import { UtilsService } from '../../services/utils.service';
 
 @Component({
   selector: 'app-auth',
@@ -106,39 +104,32 @@ export class AuthComponent {
         },
         error: (err: HttpErrorResponse) => {
           this.authForm.reset();
+          this.error = err.error.detail;
         },
       });
     }
   }
 
   authenticate(): void {
-    if (!this.authParams?.auth) return;
-
-    if (this.authParams.auth == 'local') {
-      this.error = '';
-      if (this.authForm.valid) {
-        this.authService.login(this.authForm.value).subscribe({
-          next: (data) => {
-            if ((data as Token)?.access_token)
-              this.router.navigateByUrl(this.redirectURL);
-
-            // If we're here, it means it's OTP time
-            this.username = (data as MFARequired).username;
-            this.pendingOTP = (data as MFARequired).pending_code;
-            this.authForm.reset();
-          },
-          error: () => {
-            this.authForm.reset();
-          },
-        });
-      }
-    } else if (this.authParams.auth == 'oidc') {
-      // Redirect to OIDC
-      let od = this.authParams.oidc;
-      if (!od) return;
-      let generatedLink = `http://${od.OIDC_HOST}/realms/${od.OIDC_REALM}/protocol/openid-connect/auth?client_id=${od.OIDC_CLIENT_ID}&redirect_uri=${od.OIDC_REDIRECT_URI}&response_type=code&scope=openid`;
-      window.location.replace(encodeURI(generatedLink));
+    this.error = '';
+    if (this.authParams?.oidc) {
+      window.location.replace(encodeURI(this.authParams.oidc));
     }
+
+    this.authService.login(this.authForm.value).subscribe({
+      next: (data) => {
+        if ((data as Token)?.access_token)
+          this.router.navigateByUrl(this.redirectURL);
+
+        // If we're here, it means it's OTP time
+        this.username = (data as MFARequired).username;
+        this.pendingOTP = (data as MFARequired).pending_code;
+        this.authForm.reset();
+      },
+      error: () => {
+        this.authForm.reset();
+      },
+    });
   }
 
   verifyMFA(): void {

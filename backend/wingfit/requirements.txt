@@ -9,3 +9,4 @@ requests~=2.32
 Pillow~=11.2
 pyotp~=2.9
 alembic~=1.16
+authlib~=1.6

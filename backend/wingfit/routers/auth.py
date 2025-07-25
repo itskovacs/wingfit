@@ -1,7 +1,5 @@
-import json
 from typing import Annotated
 
-import httpx
 import jwt
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import select
@@ -9,15 +7,11 @@ from sqlmodel import select
 from ..config import settings
 from ..db.core import init_user_data
 from ..deps import SessionDep, get_current_username
-from ..models.models import AuthParams, LoginRegisterModel, Token, UpdateUserPassword, User
-from ..security import (
-    create_access_token,
-    create_tokens,
-    generate_mfa_secret,
-    hash_password,
-    verify_mfa_code,
-    verify_password,
-)
+from ..models.models import (AuthParams, LoginRegisterModel, Token,
+                             UpdateUserPassword, User)
+from ..security import (create_access_token, create_tokens,
+                        generate_mfa_secret, get_oidc_client, get_oidc_config,
+                        hash_password, verify_mfa_code, verify_password)
 from ..utils.date import dt_utc, dt_utc_offset
 from ..utils.logging import app_logger
 from ..utils.misc import generate_api_token
@@ -28,24 +22,23 @@ pending_mfa_usernames = {}
 
 @router.get("/params", response_model=AuthParams)
 async def auth_params() -> AuthParams:
-    data = {"auth": settings.AUTH_METHOD, "oidc": None, "register_enabled": settings.REGISTER_ENABLE}
+    data = {"oidc": None, "register_enabled": settings.REGISTER_ENABLE}
 
-    if settings.AUTH_METHOD == "oidc":
-        data["oidc"] = {
-            "OIDC_HOST": settings.OIDC_HOST,
-            "OIDC_REALM": settings.OIDC_REALM,
-            "OIDC_CLIENT_ID": settings.OIDC_CLIENT_ID,
-            "OIDC_REDIRECT_URI": settings.OIDC_REDIRECT_URI,
-        }
+    if settings.OIDC_CLIENT_ID and settings.OIDC_CLIENT_SECRET:
+        oidc_config = await get_oidc_config()
+        auth_endpoint = oidc_config.get("authorization_endpoint")
+        data["oidc"] = (
+            f"{auth_endpoint}?client_id={settings.OIDC_CLIENT_ID}&redirect_uri={settings.OIDC_REDIRECT_URI}&response_type=code&scope=openid+profile"
+        )
 
     return data
 
 
 @router.post("/login")
 async def login(req: LoginRegisterModel, session: SessionDep):
-    if settings.AUTH_METHOD == "oidc":
-        app_logger.error("[login] Local Authentication is disabled")
-        raise HTTPException(status_code=400, detail="Bad request")
+    if settings.OIDC_CLIENT_ID or settings.OIDC_CLIENT_SECRET:
+        app_logger.error("[login] OIDC is configured")
+        raise HTTPException(status_code=400, detail="OIDC is configured")
 
     db_user = session.get(User, req.username)
     if not db_user or not verify_password(req.password, db_user.password):
@@ -90,9 +83,9 @@ async def register(req: LoginRegisterModel, session: SessionDep) -> Token:
     if not settings.REGISTER_ENABLE:
         raise HTTPException(status_code=400, detail="Registration disabled")
 
-    if settings.AUTH_METHOD == "oidc":
-        app_logger.error("[login] Local Authentication is disabled")
-        raise HTTPException(status_code=400, detail="Bad request")
+    if settings.OIDC_CLIENT_ID or settings.OIDC_CLIENT_SECRET:
+        app_logger.error("[login] OIDC is configured")
+        raise HTTPException(status_code=400, detail="OIDC is configured")
 
     user = session.get(User, req.username)
     if user:
@@ -157,74 +150,57 @@ async def refresh_token(refresh_token: str = Body(..., embed=True)):
 
 @router.post("/oidc/login", response_model=Token)
 async def oidc_login(session: SessionDep, code: str = Body(..., embed=True)) -> Token:
-    if settings.AUTH_METHOD != "oidc":
-        raise HTTPException(status_code=400, detail="Bad request")
+    if not (settings.OIDC_CLIENT_ID or settings.OIDC_CLIENT_SECRET):
+        raise HTTPException(status_code=400, detail="Partial OIDC config")
 
-    discovery_url = (
-        f"http://{settings.OIDC_HOST}/realms/{settings.OIDC_REALM}/.well-known/openid-configuration"
-    )
-    async with httpx.AsyncClient() as client:
-        discovery_resp = await client.get(discovery_url)
-        if discovery_resp.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to load OIDC configuration")
-        config = discovery_resp.json()
+    oidc_config = await get_oidc_config()
+    token_endpoint = oidc_config.get("token_endpoint")
+    try:
+        oidc_client = get_oidc_client()
+        token = oidc_client.fetch_token(
+            token_endpoint,
+            grant_type="authorization_code",
+            code=code,
+        )
+    except Exception:
+        raise HTTPException(status_code=401, detail="OIDC login failed")
 
-    token_url = config["token_endpoint"]
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "client_id": settings.OIDC_CLIENT_ID,
-        "client_secret": settings.OIDC_CLIENT_SECRET,
-    }
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-    async with httpx.AsyncClient() as client:
-        token_resp = await client.post(token_url, data=data, headers=headers)
-        if token_resp.status_code != 200:
-            raise HTTPException(status_code=401, detail="Failed to exchange code for tokens")
-        token_data = token_resp.json()
-
-    id_token = token_data.get("id_token")
+    id_token = token.get("id_token")
     alg = jwt.get_unverified_header(id_token).get("alg")
 
-    if alg == "HS256":
-        decoded = jwt.decode(
-            id_token,
-            settings.OIDC_CLIENT_SECRET,
-            algorithms=alg,
-            audience=settings.OIDC_CLIENT_ID,
-        )
-    elif alg == "RS256":
-        jwks_uri = config.get("jwks_uri")
-        if not jwks_uri:
-            raise HTTPException(status_code=400, detail="Bad request")
+    match alg:
+        case "HS256":
+            decoded = jwt.decode(
+                id_token,
+                settings.OIDC_CLIENT_SECRET,
+                algorithms=["HS256"],
+                audience=settings.OIDC_CLIENT_ID,
+            )
+        case "RS256":
+            jwks_uri = oidc_config.get("jwks_uri")
+            issuer = oidc_config.get("issuer")
+            jwks_client = jwt.PyJWKClient(jwks_uri)
 
-        async with httpx.AsyncClient() as client:
-            jwk = await client.get(jwks_uri)
-            if token_resp.status_code != 200:
-                raise HTTPException(status_code=400, detail="Bad request")
-            jwks = jwk.json().get("keys")
+            try:
+                signing_key = jwks_client.get_signing_key_from_jwt(id_token)
+                decoded = jwt.decode(
+                    id_token,
+                    key=signing_key.key,
+                    algorithms=["RS256"],
+                    audience=settings.OIDC_CLIENT_ID,
+                    issuer=issuer,
+                )
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid ID token")
+        case _:
+            raise HTTPException(status_code=500, detail="OIDC login failed, algorithm not handled")
 
-        public_keys = {}
-        for jwk in jwks:
-            kid = jwk.get("kid")
-            if not kid:
-                continue
-            public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-        kid = jwt.get_unverified_header(id_token).get("kid")
-        pk = public_keys.get(kid)
-
-        decoded = jwt.decode(
-            id_token,
-            key=pk,
-            algorithms=alg,
-            audience=settings.OIDC_CLIENT_ID,
-        )
+    if not decoded:
+        raise HTTPException(status_code=401, detail="Invalid ID token")
 
     username = decoded.get("preferred_username")
     if not username:
-        raise HTTPException(status_code=400, detail="Username not found in user info")
+        raise HTTPException(status_code=401, detail="OIDC login failed, preferred_username missing")
 
     user = session.get(User, username)
     if not user:

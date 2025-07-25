@@ -17,14 +17,8 @@ export interface MFARequired {
 }
 
 export interface AuthParams {
-  auth: string;
   register_enabled: boolean;
-  oidc?: {
-    OIDC_HOST: string;
-    OIDC_CLIENT_ID: string;
-    OIDC_REALM: string;
-    OIDC_REDIRECT_URI: string;
-  };
+  oidc?: string;
 }
 
 const JWT_TOKEN = 'WINGFIT_AT';

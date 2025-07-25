@@ -1,6 +1,6 @@
 <section class="flex flex-col md:flex-row h-screen items-center">
   <div
-    class="relative bg-white dark:bg-surface-900 w-full md:max-w-md lg:max-w-full md:mx-auto md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12 flex items-center justify-center">
+    class="relative bg-white dark:bg-surface-900 w-full md:max-w-md lg:max-w-full md:mx-auto md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12 flex items-center justify-center">
     <div class="max-w-xl w-full mx-auto h-100">
       <div class="max-w-20 mx-auto">
         <img src="favicon.png" />
@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      @if (!pendingOTP && authParams?.auth == 'local') {
+      @if (!authParams?.oidc) {
       <div class="text-xl md:text-2xl font-bold leading-tight mt-10">
         {{ isRegistering ? "Register" : "Sign in" }}
       </div>
@@ -33,7 +33,7 @@
 
       @if (pendingOTP) {
       <div pFocusTrap>
-        <p class="mt-8 text-center text-md font-light text-gray-500">
+        <p class="mt-8 text-center font-light text-gray-500">
           Enter your MFA code
         </p>
 
@@ -44,7 +44,12 @@
       </div>
       } @else {
       @defer () {
-      @if (authParams?.auth == 'local') {
+      @if (authParams?.oidc) {
+      <div class="mt-8 text-center">
+        <p-button variant="outlined" severity="primary" size="large" icon="pi pi-key" label="Sign in"
+          (click)="authenticate()" />
+      </div>
+      } @else {
       <div pFocusTrap class="mt-4" [formGroup]="authForm">
         <p-floatlabel variant="in">
           <input #username pInputText id="username" formControlName="username" autocorrect="off" autocapitalize="none"
@@ -98,15 +103,6 @@
       </p>
       }
       }
-      } @else if (authParams?.auth == 'oidc') {
-      <div class="mt-8 text-center">
-        <p-button variant="outlined" severity="primary" size="large" icon="pi pi-key" label="Sign in"
-          (click)="authenticate()" />
-      </div>
-      } @else {
-      <p class="mt-4 text-md text-center font-light text-red-500">
-        The server provided an unsupported authentication type
-      </p>
       }
       } @placeholder (minimum 0.3s) {
       <div class="mt-4">
