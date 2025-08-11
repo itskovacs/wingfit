@@ -7,6 +7,8 @@
 [![GitHub Issues](https://img.shields.io/github/issues/itskovacs/wingfit?style=for-the-badge&color=ededed)](https://github.com/itskovacs/wingfit/issues)
 [![License](https://img.shields.io/badge/license-_CC_BY_NC_SA_4.0-2596be?style=for-the-badge)](/LICENSE)
 
+<a href="https://apps.umbrel.com/app/wingfit" target="_blank"><img width="180" src="https://apps.umbrel.com/badge-light.svg"></a>
+
 </div>
 
 <p align="center">🏋️ The wingman for your fitness </p>
@@ -41,6 +43,20 @@ Demo is worth a thousand words, head to 📸 [Demo](#Demo).
 ## 🌱 Getting Started <a name = "getting_started"></a>
 
 If you need help, feel free to open an [issue](https://github.com/itskovacs/wingfit/issues).
+
+Deployment is designed to be simple using Docker.
+
+### Option 1: Docker Compose (Recommended)
+
+Use the `docker-compose.yml` file provided in this repository. No changes are required, though you may customize it to suit your needs.
+
+Run the container:
+
+```bash
+docker-compose up -d
+```
+
+### Option 2: Docker Run
 
 ```bash
 # Ensure you have the latest image
