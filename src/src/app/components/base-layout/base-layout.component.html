@@ -37,16 +37,17 @@
   </div>
 
   @if (isMobileMenuOpen) {
-  <div class="md:hidden fixed inset-0 h-full bg-white" style="z-index: 9999">
-    <nav class="flex flex-col p-8 space-y-2 bg-white border-t border-gray-200">
+  <div class="md:hidden fixed inset-0 h-full bg-white dark:bg-surface-900" style="z-index: 9999">
+    <nav class="flex flex-col p-8 space-y-2 bg-white dark:bg-surface-900 border-t border-gray-200">
       <div class="flex justify-between items-center mb-8">
         <img class="max-w-16" src="favicon_square.png" />
         <p-button icon="pi pi-times" size="large" (click)="closeMobileMenu()" text severity="secondary" />
       </div>
       @for (nav of navigationItems; track $index) {
       <ng-container>
-        <a class="font-semibold py-2 px-4 border-l-4 border-white text-gray-600" [routerLink]="nav.routerLink"
-          routerLinkActive="!border-slate-800" (click)="closeMobileMenu()">
+        <a class="font-semibold py-2 px-4 border-l-4 border-white dark:border-gray-600 text-gray-600 dark:text-gray-300"
+          [routerLink]="nav.routerLink" routerLinkActive="!border-slate-800 dark:!border-slate-200"
+          (click)="closeMobileMenu()">
           {{ nav.text }}
         </a>
       </ng-container>
