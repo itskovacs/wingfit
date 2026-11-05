@@ -1,3 +1,4 @@
+import secrets
 from typing import Annotated
 
 import jwt
@@ -28,7 +29,7 @@ async def auth_params() -> AuthParams:
         oidc_config = await get_oidc_config()
         auth_endpoint = oidc_config.get("authorization_endpoint")
         data["oidc"] = (
-            f"{auth_endpoint}?client_id={settings.OIDC_CLIENT_ID}&redirect_uri={settings.OIDC_REDIRECT_URI}&response_type=code&scope=openid+profile"
+            f"{auth_endpoint}?client_id={settings.OIDC_CLIENT_ID}&redirect_uri={settings.OIDC_REDIRECT_URI}&response_type=code&scope=openid+profile&state={secrets.token_urlsafe(16)}"
         )
 
     return data
