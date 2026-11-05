@@ -60,6 +60,13 @@ export class AuthComponent {
     this.route.queryParams.subscribe((params) => {
       const code = params['code'];
       if (code) {
+        const expectedState = sessionStorage.getItem('oidc_state');
+        sessionStorage.removeItem('oidc_state');
+        if (!expectedState || params['state'] !== expectedState) {
+          this.error = 'Invalid OIDC state, please retry';
+          return;
+        }
+
         this.authService.verifyCodeOauth(code).subscribe({
           next: (data) => {
             if (!data) return;
@@ -113,7 +120,10 @@ export class AuthComponent {
   authenticate(): void {
     this.error = '';
     if (this.authParams?.oidc) {
+      const state = new URL(this.authParams.oidc).searchParams.get('state');
+      if (state) sessionStorage.setItem('oidc_state', state);
       window.location.replace(encodeURI(this.authParams.oidc));
+      return;
     }
 
     this.authService.login(this.authForm.value).subscribe({
